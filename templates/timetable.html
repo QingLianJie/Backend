@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load my_tags %}
+{% block content %}
+
+    <div class="collapse show" id="refresh_progress">
+        <div class="progress">
+            <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+                 class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    {% if fail %}
+        <div class="mx-4 mt-3 mb-0 alert alert-danger" role="alert">
+            获取课表失败，请<a href="{% url 'bind' %}">绑定学号</a>或尝试重新获取！
+        </div>
+    {% endif %}
+
+
+
+    <div class="main container-fluid mt-2" id="main">
+        <div class="row">
+            <div class="col-md-12 col-lg-12">
+                <div class="card px-2 pt-2 mt-3 table-responsive"  {% if fail %} style="display: none"{% endif %}>
+                    {% for week,content in timetable %}
+                    <table role="table" class="timetable mt-4 mb-1 table b-table text-center table-hover b-table-fixed"
+                           style="display:none" id="week{{ week }}">
+                        <thead>
+                            <colgroup>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                                <col width='12.5%'></col>
+                            </colgroup>
+                            <tr>
+                                <th>节次</th>
+                                <th>一</th>
+                                <th>二</th>
+                                <th>三</th>
+                                <th>四</th>
+                                <th>五</th>
+                                <th>六</th>
+                                <th>日</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for head,temp in content %}
+                                {% if head.0 != "last" %}
+                                <tr>
+                                <td>
+                                    {{ head.0 }}
+                                    <br>
+                                    {{ head.1 }}
+                                </td>
+                                {% for col in temp %}
+                                    {% for courses in col %}
+                                        {% if  forloop.first %}
+                                        <td style="background-color: #ffdde1;">
+                                        {% endif %}
+                                        {% for line in courses %}
+                                            {{ line }}
+                                            <br>
+                                        {% endfor %}
+                                        {% if not forloop.last %}
+                                            <br>
+                                        {% endif %}
+                                    {% empty %}
+                                        <td>
+                                    {% endfor %}
+                                    </td>
+                                {% endfor %}
+                                {% endif %}
+                                </tr>
+                            {% endfor %}
+
+                        </tbody>
+                        <caption>
+                            <div class="row mx-3">
+                                <div class="col-12">
+                                {% for line in  content.5.1 %}
+                                    {{ line.strip }}
+                                    {% if not forloop.last %}，{% endif %}
+                                {% endfor %}
+                                </div>
+                            </div>
+                        </caption>
+                    </table>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row my-3">
+            <div class="col-12">
+                <div class="card shadow-lg p-2">
+                    <div class="row align-items-center">
+                        <div class="col-10 mb-2">
+                            <nav aria-label="..." style="overflow: auto;">
+                              <ul class="pagination pagination-sm mb-0">
+                                {% for week,content in timetable %}
+                                <li class="change_week page-item" id="week_{{ week }}_button"><a class="page-link" href="#"
+                                                         onclick="show_week({{ week }})">{{ week }}</a></li>
+                                {% endfor %}
+                              </ul>
+                            </nav>
+                        </div>
+                        <div class="col-2">
+                            <div class="btn-group-toggle btn-group btn-group-sm float-right">
+                                <button type="button" class="btn btn-success" id="refresh_timetable">刷新课表</button>
+                                <button type="button" class="btn btn-primary" onclick="show_week(get_current_week())">回到本周</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="normalModal" tabindex="-1" aria-labelledby="normalModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modal_close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modal_button">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function get_current_week() {
+            return "1";
+        }
+        function get_current_term() {
+            return "2020-2021-2";
+        }
+        function show_week(week) {
+            $('.timetable').hide();
+            $('#week'+week).show();
+            var name = "#week_"+week+"_button";
+            $(".change_week").removeClass("active");
+            $(name).addClass("active");
+        }
+        window.onload = function () {
+
+            show_week(get_current_week());
+            $('#refresh_progress').collapse('hide');
+
+            //刷新课表
+            $('#refresh_timetable')[0].onclick = function () {
+                $('#refresh_progress').collapse('show');
+                $.get("/api/refresh/timetable?term="+get_current_term(), function (data) {
+                    console.log(data);
+                    if (data['status'] == 'SUCCESS') {
+                        window.setInterval(function () {
+                            $.get("/api/query/timetable", function (data) {
+                                if (data['status'] != 'FAILURE') {
+                                    $('#modalContent')[0].innerText = "课表获取成功，正在刷新页面！";
+                                    $('#normalModal').modal('show');
+                                    setTimeout(function () {
+                                        location.reload();
+                                    },3000);
+                                }
+                            });
+                        }, 5000);
+                    } else {
+                        $('#modalContent')[0].innerText = "请求刷新成绩失败，可能是请求过于频繁或服务器出现问题！";
+                        $('#normalModal').modal('show');
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}
+

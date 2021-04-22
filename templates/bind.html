@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main container mt-3 ">
+    <div class="row">
+        {% if error %}
+            <div class="alert alert-danger col-12" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+        {% if success_bind %}
+            <div class="alert alert-success col-12" role="alert">
+                学号绑定成功！
+            </div>
+        {% endif %}
+        {% if success_remove %}
+            <div class="alert alert-success col-12" role="alert">
+                学号解绑成功！
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="mt-3 col-lg-6 offset-lg-3 col-12 px-5">
+            <div class="card">
+                <div class="card-header">
+                    <div class="mt-2 mb-2">
+                        <h4>绑定 HEU 账号</h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                {% if bind %}
+                    <p>您已绑定账号 <strong>{{ heu_username }}</strong> 是否解绑？</p>
+                    <form class="login form-group mb-0" method="POST" action="{% url 'bind' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="remove">
+                        <button class="primaryAction btn btn-danger btn-block" type="submit">解绑</button>
+                    </form>
+                {% else %}
+                    <form class="login form-group mb-0" method="POST" action="{% url 'bind' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="bind">
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" name="heu_username" placeholder="账号/邮箱"
+                                       autocomplete="heu_username" maxlength="150" required="" id="id_login">
+                            </div>
+                        </div>
+                        <div class="form-group row mb-0">
+                            <div class="col-sm-12">
+                                <input type="password" class="form-control" placeholder="密码" name="heu_password"
+                                       autocomplete="heu_password" required="" id="id_password">
+                            </div>
+                        </div>
+                        <button class="mt-3 primaryAction btn btn-success btn-block" type="submit">绑定</button>
+                    </form>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

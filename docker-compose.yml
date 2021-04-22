@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - ./mysql:/var/lib/mysql
+    expose:
+      - "3306"
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=djangodocker
+      - MYSQL_USER=django
+      - MYSQL_PASSWORD=django
+    command: [ #使用 command 可以覆盖容器启动后默认执行的命令
+      '--character-set-server=utf8mb4', #设置数据库表的数据集
+      '--collation-server=utf8mb4_unicode_ci', #设置数据库表的数据集
+    ]
+
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"
+    restart: always
+
+  web:
+    build: .
+    command: python manage.py runserver 0:8000
+    ports:
+      - "8000:8000"
+    #command: uwsgi --ini uwsgi.ini
+    working_dir: /code
+    volumes:
+      - .:/code
+    #ports:
+    #  - "7777:7777"
+    depends_on:
+      - mysql
+      - redis
+
+  celery:
+    build: .
+    command: celery -A qinglianjie worker -l info
+    working_dir: /code
+    volumes:
+      - .:/code
+    depends_on:
+      - mysql
+      - redis

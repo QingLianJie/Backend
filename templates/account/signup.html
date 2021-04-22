@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% block content %}
+<div class="main container mt-3 ">
+    <div class="row">
+        {% if form.errors %}
+            <div class="alert alert-danger col-12" role="alert">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error|escape }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                    <li>{{ error|escape }}</li>
+            {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="mt-3 col-lg-6 offset-lg-3 col-12 px-5">
+            <div class="card">
+                <div class="card-header">
+                    <div class="mt-2 mb-2">
+                        <h4>欢迎加入</h4>
+                        <div class="mt-1">注册获取更多功能</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form class="signup form-group mb-0" id="signup_form" method="POST" action="{% url 'account_signup' %}">
+
+                        {% csrf_token %}
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+
+
+
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" name="username" placeholder="用户名"
+                                       autocomplete="username" minlength="1" maxlength="150" required=""
+                                       id="id_username"
+                                        {% if form.username.value %}
+                                        value="{{ form.username.value }}"
+                                        {% endif %}
+                                >
+                            </div>
+                            <div class="col-sm-12 mt-3">
+                                <input type="email" class="form-control" placeholder="邮箱" name="email"
+                                       autocomplete="email-password" id="id_email"
+                                       {% if form.email.value %}
+                                        value="{{ form.email.value }}"
+                                       {% endif %}
+                                >
+                            </div>
+                            <div class="col-sm-12 mt-3">
+                                <input type="password" name="password1" class="form-control" placeholder="密码"
+                                       autocomplete="new-password" required="" id="id_password1">
+                            </div>
+                            <div class="col-sm-12 mt-3">
+                                <input type="password" name="password2" class="form-control" placeholder="重复密码"
+                                       autocomplete="new-password" required="" id="id_password2">
+                            </div>
+                        </div>
+                        <button class="primaryAction btn btn-primary btn-block" type="submit">注册</button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+

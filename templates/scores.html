@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load my_tags %}
+{% block content %}
+
+    <div class="collapse show" id="refresh_progress">
+        <div class="progress">
+            <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+                 class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    {% if fail %}
+        <div class="mx-4 mt-3 mb-0 alert alert-danger" role="alert">
+            获取成绩失败，请<a href="{% url 'bind' %}">绑定学号</a>或尝试刷新成绩！
+        </div>
+    {% endif %}
+
+
+
+    <div class="main container mt-2 collapse show" id="main">
+        <div class="row">
+            <div class="col-md-12 col-lg-7">
+                <div class="card px-2 pt-2 mt-3 pb-3">
+                    <div class="card-body pb-0">
+                        <strong>{{ username }}</strong> 的成绩单
+                        {% if not fail %}
+                            <br>
+                            更新于: {{ date }}
+                        {% endif %}
+                        <hr>
+                        <button type="button" class="btn btn-primary btn-sm" id="refresh_scores">获取最新成绩</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="calc_avg">计算加权成绩</button>
+
+                    </div>
+                </div>
+
+                {% if not fail %}
+                    {% for term,records in scores %}
+                        <div class="card mt-2 px-0 pb-0 pt-0">
+                            <button type="button" class="btn btn-outline-secondary btn-block" data-toggle="collapse"
+                                    data-target="#{{ term | format_term }}">
+                                {{ term }}
+                            </button>
+                            <div class="collapse score_table" id="{{ term | format_term }}">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">课程名称</th>
+                                        <th scope="col">成绩</th>
+                                        <th scope="col">学分</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for i in records %}
+                                        <tr>
+                                            <th scope="row">{{ i.0 }}</th>
+                                            <td>{{ i.1 }}</td>
+                                            <td>{{ i.2 }}</td>
+                                            <td>{{ i.3 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 col-lg-5">
+                <div class="card mt-3">
+                    <button type="button" class="btn btn-primary btn-block" data-toggle="collapse"
+                            data-target="#" id="count_credit">
+                        点击统计学分
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="normalModal" tabindex="-1" aria-labelledby="normalModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modal_close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modal_button">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+
+            {#$('#main').collapse('show')#}
+             $('#refresh_progress').collapse('hide');
+
+             //刷新成绩
+            $('#refresh_scores')[0].onclick = function () {
+                $('#refresh_progress').collapse('show');
+                $.get("/api/refresh/scores", function (data) {
+                    console.log(data);
+                    if (data['status'] == 'SUCCESS') {
+                        {#$('#modalContent')[0].innerText = "成功发起请求！";#}
+                        {#$('#normalModal').modal('show');#}
+                        window.setInterval(function () {
+                            $.get("/api/query/scores", function (data) {
+                                if (data['status'] != 'FAILURE') {
+                                    $('#modalContent')[0].innerText = "成绩获取成功，正在刷新页面！";
+                                    $('#normalModal').modal('show');
+                                    setTimeout(function () {
+                                        location.reload();
+                                    },3000);
+                                    console.log(data);
+                                }
+                            });
+                        }, 5000);
+                    } else {
+                        $('#modalContent')[0].innerText = "请求刷新成绩失败，可能是请求过于频繁或服务器出现问题！";
+                        $('#normalModal').modal('show');
+                        $('#refresh_progress').collapse('hide');
+                    }
+                });
+            }
+
+            //TODO 统计学分
+            $('#count_credit')[0].onclick = function () {
+                $('#modalContent')[0].innerText = "还没写";
+                $('#normalModal').modal('show');
+            }
+
+            //TODO 计算加权平均分
+            $('#calc_avg')[0].onclick = function () {
+                $('#modalContent')[0].innerText = "还没写";
+                $('#normalModal').modal('show');
+            }
+
+            {% if not fail %}
+                $('.score_table :first').collapse('show')
+            {% endif %}
+        }
+    </script>
+{% endblock %}
+
