@@ -47,25 +47,25 @@ class Crawler:
             raise Exception("Incorrect username or password!")
 
         return self
-		
+
     def login_one(self, username, password):
         text = self.session.get("https://cas.hrbeu.edu.cn/cas/login#/").text
         lt = re.compile(r'type="hidden" name="lt" value="(.*?)"').findall(text)[0]
         execution = re.compile(r'type="hidden" name="execution" value="(.*?)"').findall(text)[0]
         data = {
-        'username': username,
-        'password': password,
-        '_eventId': 'submit',
-        'lt': lt,
-        'source': 'cas',
-        'execution': execution,
+            'username': username,
+            'password': password,
+            '_eventId': 'submit',
+            'lt': lt,
+            'source': 'cas',
+            'execution': execution,
         }
         res = self.session.post("https://cas.hrbeu.edu.cn/cas/login", data=data)
-        #if username not in self.session.get("https://edusys.wvpn.hrbeu.edu.cn/jsxsd/framework/main.jsp").text:
+        # if username not in self.session.get("https://edusys.wvpn.hrbeu.edu.cn/jsxsd/framework/main.jsp").text:
         #    raise Exception("Incorrect username or password!")
 
         return self
-    
+
     def getScores(self):
         scores = []
         res = self.session.post(
@@ -83,10 +83,10 @@ class Crawler:
                 scores.append(contents)
         return scores
 
-    def getTermTimetable(self, term:str):
+    def getTermTimetable(self, term: str):
         result = []
-        for week in range(1,31):
-            result.append(self.getTimetable(term,str(week)))
+        for week in range(1, 31):
+            result.append(self.getTimetable(term, str(week)))
         return result
 
     def getTimetable(self, term: str, week: str):
@@ -136,12 +136,61 @@ class Crawler:
         """
         return timetable
 
+    def get_csrf_token(self, content):
+        import re
+        pattern = re.compile(r'<meta itemscope="csrfToken" content="(.*?)">')
+        return pattern.findall(content)[0]
+
+    def report(self):
+        import time, json
+        from lib.form import report_str
+
+        res = self.session.get("http://one.hrbeu.edu.cn/infoplus/form/JCXBBJSP/start")
+        csrf = self.get_csrf_token(res.text)
+        res = self.session.post("http://one.hrbeu.edu.cn/infoplus/interface/start", data={
+            "csrfToken": csrf,
+            "idc": "JCXBBJSP",
+            "release": "",
+            "formData": r'{"_VAR_URL":"http://one.hrbeu.edu.cn/infoplus/form/JCXBBJSP/start","_VAR_URL_Attr":"{}"}',
+        })
+        url = json.loads(res.text)["entities"][0]
+        report_id = url.split("/")[-2]
+        print(url, report_id)
+
+        res = self.session.get(url)
+        #print(res.text)
+        csrf = self.get_csrf_token(res.text)
+        print(csrf)
+        cur_time = time.localtime(time.time())
+        temp = list(cur_time)
+        temp[3] = temp[4] = temp[5] = 0
+        today = time.struct_time(temp)
+        today = int(time.mktime(today))
+        now = int(time.time())
+
+        res = self.session.post(
+            url="http://one.hrbeu.edu.cn/infoplus/interface/doAction",
+            data={
+                'stepId': report_id,
+                'actionId': 1,
+                'formData': report_str.format(
+                    year=cur_time.tm_year,
+                    month=cur_time.tm_mon,
+                    day=cur_time.tm_mday,
+                    today=today,
+                    now=now,
+                ),
+                'timestamp': int(time.time()),
+                'rand': "267.09397282941765",
+                'boundFields': 'fieldFDYsprq,fieldJBszgy,fieldBBshi,fieldLYqtl,fieldBBsheng,fieldLYqtyc,fieldLYzzl,fieldDel,fieldJBszxy,fieldFSJspsj,fieldLYrqFrom,fieldLYgyl,fieldGYLfjh,fieldFSJspr,fieldQTLmc,fieldLYbgl,fieldBBcxrqFrom,fieldJBjcxlx,fieldJLly,fieldLYzzyc,fieldBBsylb,fieldFDYspyj,fieldLYyc,fieldZMCLUrl,fieldBBcxsjFrom,fieldBBycsj,fieldBBdiqu,fieldJBsqr,fieldLYsjTo,fieldJBlxfs,fieldJBxh,fieldBBcxsy,fieldSPyc,fieldLYyc1,fieldZZLfjh,fieldBBcxsjTo,fieldBGLfjh,fieldFSJspyj,fieldLYrqTo,fieldBByc2,fieldBByc3,fieldQTLfjh,fieldBByc1,fieldJBfdyxm,fieldBBh1,fieldBBcxrqTo,fieldLYbgyc,fieldZZLmc,fieldLYgyyc,fieldLYsjFrom,fieldGYLmc,fieldBBxxdz,fieldJBfdylxdh,fieldBGLmc,fieldFDYspr',
+                "csrfToken": csrf,
+                "lang": "en",
+                "nextUsers": "{}",
+                "remark": "",
+            }
+        )
+        print(res.text)
+
 
 if __name__ == "__main__":
-    #print(verify("2018065608", "114514"))
-    #t = Crawler()
-    #t.login("", "")
-    #print(t.getTimetable("2020-2021-1", "5"))
-    #print(t.getTermTimetable("2020-2021-2"))
-    #print(t.getScores())
     exit(0)

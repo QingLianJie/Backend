@@ -22,13 +22,21 @@ def query_time_table(username:str, password:str, term:str):
 def report_daily():
     #os.environ.setdefault("DJANGO_SETTINGS_MODULE", "qinglianjie.settings")
     import django
-    from lib.report import auto_report
     django.setup()
     from api.models import HEUAccountInfo
     print(HEUAccountInfo.objects.all())
     for info in HEUAccountInfo.objects.filter(report_daily=True, account_verify_status=True):
-        try:
-            auto_report(info.heu_username, info.heu_password)
-        except:
-            pass
+        print(HEUAccountInfo.heu_username)
+        do_report.delay(info.heu_username, info.heu_password)
     return "Done"
+
+
+@shared_task
+def do_report(username:str, password:str):
+    try:
+        crawler = Crawler()
+        crawler.login_one(username, password)
+        crawler.report()
+        return "Ok"
+    except Exception as e:
+        return str(e)

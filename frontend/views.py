@@ -171,7 +171,7 @@ def report(request):
     error = False
 
     if not user_info.account_verify_status:
-        return redirect(reverse("frontend:bind"))
+        return redirect(reverse("bind"))
 
     if request.method == "POST":
         if request.POST.get("action") == "on":

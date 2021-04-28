@@ -25,7 +25,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "test_task": {
         "task": "api.tasks.report_daily",
-        "schedule": crontab(hour=0, minute=30),
+        "schedule": crontab(hour=0, minute=5),
     }
 }
 
