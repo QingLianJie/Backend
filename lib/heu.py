@@ -47,7 +47,25 @@ class Crawler:
             raise Exception("Incorrect username or password!")
 
         return self
+		
+    def login_one(self, username, password):
+        text = self.session.get("https://cas.hrbeu.edu.cn/cas/login#/").text
+        lt = re.compile(r'type="hidden" name="lt" value="(.*?)"').findall(text)[0]
+        execution = re.compile(r'type="hidden" name="execution" value="(.*?)"').findall(text)[0]
+        data = {
+        'username': username,
+        'password': password,
+        '_eventId': 'submit',
+        'lt': lt,
+        'source': 'cas',
+        'execution': execution,
+        }
+        res = self.session.post("https://cas.hrbeu.edu.cn/cas/login", data=data)
+        #if username not in self.session.get("https://edusys.wvpn.hrbeu.edu.cn/jsxsd/framework/main.jsp").text:
+        #    raise Exception("Incorrect username or password!")
 
+        return self
+    
     def getScores(self):
         scores = []
         res = self.session.post(

@@ -9,7 +9,7 @@ urlpatterns = [
     path('refresh/scores', views.refresh_scores, name="refresh_scores"),
     path('query/timetable', views.query_time_table, name="query_time_table"),
     path('refresh/timetable', views.refresh_time_table, name="refresh_time_table"),
-
+    path('report', views.test_auto_report, name="auto_report"),
     #path('heu/update', views.update_heu_accounts, name="update_heu_accounts"),
     #path('heu/remove', views.remove_heu_accounts, name="remove_heu_accounts"),
 ]

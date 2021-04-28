@@ -13,9 +13,9 @@ services:
       - MYSQL_DATABASE=djangodocker
       - MYSQL_USER=django
       - MYSQL_PASSWORD=django
-    command: [ #使用 command 可以覆盖容器启动后默认执行的命令
-      '--character-set-server=utf8mb4', #设置数据库表的数据集
-      '--collation-server=utf8mb4_unicode_ci', #设置数据库表的数据集
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
     ]
 
   redis:
@@ -48,3 +48,8 @@ services:
     depends_on:
       - mysql
       - redis
+
+  selenium:
+    image: selenium/standalone-chrome:4.0.0-beta-3-20210426
+    expose:
+      - "4444"

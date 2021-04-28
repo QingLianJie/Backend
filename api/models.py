@@ -9,3 +9,4 @@ class HEUAccountInfo(models.Model):
     heu_username = models.CharField(max_length=100)
     heu_password = models.CharField(max_length=100)
     account_verify_status = models.BooleanField(default=False)
+    report_daily = models.BooleanField(default=False)

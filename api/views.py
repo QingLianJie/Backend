@@ -6,6 +6,7 @@ from api.models import HEUAccountInfo
 from api import tasks
 from django_redis import get_redis_connection
 from qinglianjie.settings import QUERY_INTERVAL
+from api.tasks import *
 import lib.heu, time, json
 
 
@@ -185,6 +186,17 @@ def refresh_time_table(request):
         # print(res.task_id)
     else:
         return JsonResponse({"status": "FAILURE", "message": "Query interval too short!"})
+    return JsonResponse({"status": "SUCCESS"})
+
+
+@login_required
+@heu_account_verify_required
+def test_auto_report(request):
+    user_id = request.session["_auth_user_id"]
+    user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
+    username = user_info.heu_username
+    password = user_info.heu_password
+    tasks.report_daily.delay()
     return JsonResponse({"status": "SUCCESS"})
 
 

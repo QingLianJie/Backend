@@ -1,8 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from api.views import query_scores, query_time_table
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.urls import reverse
 from datetime import datetime,timedelta
 from api.models import HEUAccountInfo
 import json, lib
@@ -117,13 +118,17 @@ def bind(request):
                 return render(request, "bind.html", {
                     "bind": user_info.account_verify_status,
                     "heu_username": username,
-                    "error": "账号密码不能为空！"
+                    "error": "账号密码不能为空！",
+                    'username': get_username(request),
+                     'login': True,
                 })
             if not lib.heu.verify(username, password):
                 return render(request, "bind.html", {
                     "bind": user_info.account_verify_status,
                     "heu_username": username,
-                    "error": "HEU账号验证失败！"
+                    "error": "HEU账号验证失败！",
+                    'username': get_username(request),
+                    'login': True,
                 })
             user_info.heu_username = username
             user_info.heu_password = password
@@ -133,6 +138,8 @@ def bind(request):
                 "bind": user_info.account_verify_status,
                 "heu_username": username,
                 "success_bind": True,
+                'username': get_username(request),
+                'login': True,
             })
         elif request.POST.get("action") == "remove":
             user_info.heu_username = ""
@@ -143,12 +150,45 @@ def bind(request):
                 "bind": user_info.account_verify_status,
                 "heu_username": username,
                 "success_remove": True,
+                'username': get_username(request),
+                'login': True,
             })
-
 
     return render(request, "bind.html", {
         "bind": user_info.account_verify_status,
         "heu_username": username,
         'username': get_username(request),
         'login': True,
+    })
+
+
+@login_required
+def report(request):
+    user_id = request.session["_auth_user_id"]
+    user_info = HEUAccountInfo.objects.get_or_create(user=User.objects.get(id=user_id))[0]
+    username = user_info.heu_username
+    success = False
+    error = False
+
+    if not user_info.account_verify_status:
+        return redirect(reverse("frontend:bind"))
+
+    if request.method == "POST":
+        if request.POST.get("action") == "on":
+            user_info.report_daily = True
+            user_info.save()
+            success = True
+
+        if request.POST.get("action") == "off":
+            user_info.report_daily = False
+            user_info.save()
+            error = True
+
+    return render(request, "report.html", {
+        "report": user_info.report_daily,
+        "heu_username": username,
+        'username': get_username(request),
+        'login': True,
+        'success': success,
+        'error': error,
     })
