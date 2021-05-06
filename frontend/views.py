@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from datetime import datetime,timedelta
 from api.models import HEUAccountInfo
+from frontend.models import Article
 import json, lib
 
 
@@ -27,6 +28,7 @@ def index(request):
         'login': not (request.session.get('_auth_user_id') is None),
         'index_page': True,
         'username': get_username(request),
+        'posts': Article.objects.all(),
     })
 
 

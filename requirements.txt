@@ -38,3 +38,5 @@ wincertstore==0.2
 zipp==3.4.1
 uwsgi
 pymysql
+mdeditor
+markdown

@@ -97,7 +97,7 @@
         </div>
 
         <div class="row my-3">
-            <div class="col-12">
+            <div class="col-12 fixed-bottom">
                 <div class="card shadow-lg p-2">
                     <div class="row align-items-center">
                         <div class="col-10 mb-2">
@@ -120,9 +120,12 @@
                 </div>
             </div>
         </div>
-
     </div>
-
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
     <div class="modal fade" id="normalModal" tabindex="-1" aria-labelledby="normalModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -144,7 +147,10 @@
 
     <script>
         function get_current_week() {
-            return "1";
+            var cur = new Date();
+            var temp = new Date();
+            temp.setFullYear(2021,2,1);
+            return parseInt((cur-temp)/(7*24*60*60*1000))+1;
         }
         function get_current_term() {
             return "2020-2021-2";

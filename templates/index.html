@@ -1,57 +1,64 @@
 {% extends 'base.html' %}
 {% load my_tags %}
 {% block content %}
-<div class="collapse show" id="refresh_progress">
-    <div class="progress">
-        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
-             class="progress-bar progress-bar-striped progress-bar-animated"
-             style="width: 100%;">
+    <div class="collapse show" id="refresh_progress">
+        <div class="progress">
+            <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+                 class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 100%;">
+            </div>
         </div>
     </div>
-</div>
 
-<div class="main container mt-2 ">
-    <div class="row">
-        <div class="mb-3 col-md-12 col-lg-8">
-            <div class="card px-2 py-2 mt-3 pb-3">
-                <div class="card bg-light p-3 mt-3 mx-2 ">
-                    <div class="card-body">
-                        test
+    <div class="main container mt-2 ">
+        <div class="row">
+            <div class="mb-3 col-md-12 col-lg-8">
+                {% for post in posts %}
+                    <div class="card p-3 mt-3">
+                        <span class="font-weight-bold form-inline">
+                            <h4>{{ post.title }}</h4>
+                            <small class="mx-2 text-muted">{{ post.created.year }}年{{ post.created.month }}月{{ post.created.day }}日</small>
+                        </span>
+                        <hr class="my-2">
+                        <p>{{ post.body | to_markdown | safe}}</p>
+                    </div>
+                {% endfor %}
+                <div class="card px-2 py-2 mt-3 pb-3">
+                    <div class="card bg-light p-3 mt-3 mx-2 ">
+                        <div class="card-body">
+                            test
+                        </div>
+                    </div>
+                    <div class="card bg-light p-3 mt-3 mx-2">
+                        <div class="card-body">
+                            test
+                        </div>
                     </div>
                 </div>
-                <div class="card bg-light p-3 mt-3 mx-2">
-                    <div class="card-body">
-                        test
-                    </div>
+            </div>
+            <div class="mb-3 col-md-12 col-lg-4">
+                <div class="card p-3 mt-3">
+                    <h6><strong>Contact Qinglianjie</strong></h6>
+                    <hr class="my-2">
+                    <p><a href="mailto:bakedviolin@foxmail.com">bakedviolin@foxmail.com</a></p>
+                </div>
+                <div class="card p-3 mt-3">
+                    <h6><strong>特别赞助</strong></h6>
+                    <hr class="my-2">
+                    <p>
+                        反正没有海某科技
+                    </p>
+
                 </div>
             </div>
+
         </div>
-        <div class="mb-3 col-md-12 col-lg-4">
-            <div class="card p-3 mt-3">
-                <h6><strong>公告</strong></h6>
-                <hr class="my-2">
-                <p>
-                    诚招前端大佬
-                </p>
-
-            </div>
-            <div class="card p-3 mt-3">
-                <h6><strong>特别赞助</strong></h6>
-                <hr class="my-2">
-                <p>
-                    反正没有海某科技
-                </p>
-
-            </div>
-        </div>
-
     </div>
-</div>
-<script>
-    window.onload = function() {
-        $('#refresh_progress').collapse('hide');
+    <script>
+        window.onload = function () {
+            $('#refresh_progress').collapse('hide');
 
 
-    }
-</script>
+        }
+    </script>
 {% endblock %}

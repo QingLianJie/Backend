@@ -41,7 +41,7 @@ services:
 
   celery:
     build: .
-    command: celery -A qinglianjie worker -l info
+    command: celery -A qinglianjie worker -B -l info
     working_dir: /code
     volumes:
       - .:/code
