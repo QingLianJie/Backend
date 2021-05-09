@@ -231,6 +231,8 @@ def courses(request):
         'pre': page_num-6 >= 1,
         'next': page_num+6 <= paginator.num_pages,
         's': request.GET.get('s'),
+        'username': get_username(request),
+        'login': not (request.session.get('_auth_user_id') is None),
     })
 
 
@@ -240,4 +242,6 @@ def course(request, course_id):
         "course_id": course_id,
         "course": course,
         "count": CourseScore.objects.filter(course=course).count(),
+        'username': get_username(request),
+        'login': not (request.session.get('_auth_user_id') is None),
     })
