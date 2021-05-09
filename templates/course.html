@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load my_tags %}
+{% block content %}
+    <div class="collapse show" id="refresh_progress">
+        <div class="progress">
+            <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+                 class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+
+    <div class="main container mt-2 ">
+        <div class="row">
+            <div class="col-lg-8 col-md-12 mt-2">
+                <div class="card p-3"><!----><!---->
+                    <div>
+                        <div class="align-self-bottom" style="float: left;">
+                            <h5><a target="_self" href="/courses" class="text-decoration-none text-reset">
+                                &lt;&lt; {{ course.name }}
+                            </a>
+                            <small class="text-muted">课程编号：{{ course.course_id }}</small>
+                            </h5>
+                        </div>
+{#                        <div class="d-none d-sm-block" style="float: right;">#}
+{#                            <button type="button" class="btn btn-secondary">历年考题</button>#}
+{#                        </div>#}
+                    </div>
+                    <hr class="my-2">
+                    <p class="card-text">
+                        <span class="mr-5"> 挂科率： <span id="fail" class="text-danger">0.00%</span></span>
+                        <span> 优秀率： <span id="great" class="text-success">34.00%</span></span>
+                        <br>
+                        <span class="mr-3">学分：{{ course.credit }}</span>
+                        <span class="mr-3">总学时：{{ course.total_time }}</span><br class="d-block d-sm-none">
+                        <span class="mr-3">课程属性：{{ course.attributes }}</span>
+                        <span>考试类型：{{ course.assessment_method }}</span>
+                        <br>
+                        <span>课程性质：{{ course.kind }}</span>
+                    </p><!----><!---->
+                </div>
+                <div class="card mt-2 p-3">
+                    <div>
+                        <h5> 成绩分布图 <small class="text-muted"> 参与统计人数：{{ count }}</small><!---->
+                        <button id="switch" type="button" class="float-right btn btn-secondary">切换类型</button>
+                        </h5>
+                    </div>
+                    <hr class="my-2">
+                    <div id="graph0" class="card-text" style="height:400px;"></div>
+                    <div id="graph1" class="card-text" style="height:400px;"></div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12 mb-3 mt-2">
+                <div class="card p-3">
+                    <h5>
+                        评论功能暂未上线
+                    </h5>
+                    <hr class="my-2">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function draw(tag, data, ele_id) {
+            console.log(ele_id);
+            var chartDom = document.getElementById(ele_id);
+            console.log(chartDom);
+            var myChart = echarts.init(chartDom);
+            myChart.resize();
+            //window.addEventListener('resize', function () {
+            //    myChart.resize();
+            //});
+            var option;
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                        type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: tag,
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value'
+                    }
+                ],
+                series: [
+                    {
+                        name: '人数',
+                        type: 'bar',
+                        barWidth: '60%',
+                        data: data
+                    }
+                ]
+            };
+            option && myChart.setOption(option);
+        }
+
+        window.onload = function () {
+            $('#refresh_progress').collapse('hide');
+
+            var course_id = {{ course_id }};
+            $.get("/api/query/course_scores", {"course_id": course_id}, function (res) {
+                console.log(res.data);
+                var data0 = new Array(101);
+                var data1 = new Array(5);
+                var dict = {};
+                var tag0 = [];
+                for (var i = 0; i <= 100; ++i) {
+                    tag0.push(i);
+                    data0[i] = 0;
+                }
+                for (var i = 0; i < 5; ++i)
+                    data1[i] = 0;
+                var tag1 = ["不及格", "及格", "中等", "良好", "优秀"]
+                for (var i in tag1) {
+                    dict[tag1[i]] = 0;
+                }
+                for (var i in res.data) {
+                    ele = res.data[i];
+                    if (isNaN(parseInt(ele))) dict[ele]++;
+                    else data0[parseInt(ele)]++;
+                }
+
+                for (var i in tag1){
+                    var name = tag1[i];
+                    console.log(name, dict[name]);
+                    data1[i] = dict[name];
+                }
+
+                console.log(data0);
+                console.log(data1);
+
+                draw(tag0, data0, "graph0");
+                draw(tag1, data1, "graph1");
+
+                var sum = 0;
+
+                for(var i in data0)
+                    sum += data0[i];
+                console.log(sum);
+                if(sum > 0) {
+                    $('#graph1')[0].hidden = true;
+                }
+                else{
+                    $('#graph0')[0].hidden = true;
+                }
+
+                var total = {{ count }};
+                var fail = 0;
+                var great = 0;
+
+                great += dict["优秀"];
+                for(var i=90; i<=100; ++i){
+                    great += data0[i];
+                }
+
+                fail += dict["不及格"];
+                for(var i=0; i<60; ++i){
+                    fail += data0[i];
+                }
+
+                console.log(great, fail, total);
+
+                $('#fail' )[0].textContent = (100.0*fail /total).toFixed(2) + "%";
+                $('#great')[0].textContent = (100.0*great/total).toFixed(2) + "%";
+
+            });
+
+            $('#switch').click(function () {
+                var graph0 = $('#graph0')[0];
+                graph0.hidden = !graph0.hidden;
+                var graph1 = $('#graph1')[0];
+                graph1.hidden = !graph1.hidden;
+            })
+
+        }
+    </script>
+{% endblock %}

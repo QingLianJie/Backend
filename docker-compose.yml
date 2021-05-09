@@ -23,6 +23,10 @@ services:
     expose:
       - "6379"
     restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis_data/:/data/
 
   web:
     build: .

@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from datetime import datetime,timedelta
-from api.models import HEUAccountInfo
+from api.models import HEUAccountInfo, CourseInfo, CourseScore
 from frontend.models import Article
+from django.core.paginator import Paginator
 import json, lib
 
 
@@ -193,4 +194,50 @@ def report(request):
         'login': True,
         'success': success,
         'error': error,
+        'report_page': True,
+    })
+
+
+def courses(request):
+    all_courses = None
+    if "s" in request.GET:
+        all_courses = CourseInfo.objects.filter(name__icontains=request.GET.get("s"))
+    else:
+        all_courses = CourseInfo.objects.all()
+
+    paginator = Paginator(
+        [[course.name, course.course_id, CourseScore.objects.filter(course=course).count()]
+            for course in all_courses],
+        20,
+    )
+    print(paginator)
+
+    page_num = request.GET.get('page')
+    if page_num is None:
+        page_num = 1
+    elif type(page_num) is str:
+        page_num = int(page_num)
+
+
+    list_page = []
+    for i in range(-5,6):
+        if i+page_num>=1 and i+page_num<=paginator.num_pages:
+            list_page.append(i+page_num)
+
+    return render(request, "courses.html", {
+        'courses_page': True,
+        'page': paginator.page(page_num),
+        'list_page': list_page,
+        'pre': page_num-6 >= 1,
+        'next': page_num+6 <= paginator.num_pages,
+        's': request.GET.get('s'),
+    })
+
+
+def course(request, course_id):
+    course = CourseInfo.objects.get(course_id=course_id)
+    return render(request, "course.html", {
+        "course_id": course_id,
+        "course": course,
+        "count": CourseScore.objects.filter(course=course).count(),
     })

@@ -15,3 +15,8 @@ def to_markdown(text):
             'markdown.extensions.extra',
             'markdown.extensions.toc',
     ])
+
+
+@register.filter
+def page_range(num):
+    return [i-num//2 for i in range(num)]

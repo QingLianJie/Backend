@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from api.models import HEUAccountInfo
+from api.models import HEUAccountInfo, CourseScore, CourseInfo
 from api import tasks
 from django_redis import get_redis_connection
 from qinglianjie.settings import QUERY_INTERVAL
@@ -198,6 +198,52 @@ def test_auto_report(request):
     password = user_info.heu_password
     tasks.report_daily.delay()
     return JsonResponse({"status": "SUCCESS"})
+
+
+def test_collect_scores(request):
+    collect_scores.delay()
+    return HttpResponse("ok")
+
+
+def query_course_scores(request):
+    course_id = request.GET.get("course_id")
+    if course_id is None:
+        return JsonResponse({"status": "FAILURE", "message": "You must provide course_id !"})
+    term = request.GET.get("term")
+    course = CourseInfo.objects.get(course_id=course_id)
+    print(course, term)
+    res = []
+    if term is None:
+        res = [record.score for record in CourseScore.objects.filter(course=course)]
+    else:
+        res = [record.score for record in CourseScore.objects.filter(
+            course=course,
+            term=term,
+        )]
+    return JsonResponse({
+        "status": "SUCCESS",
+        "data": res,
+    })
+
+
+def query_course_info(request):
+    res = []
+    for course in CourseInfo.objects.all():
+        res.append([
+            course.course_id,
+            course.name,
+            course.credit,
+            course.total_time,
+            course.assessment_method,
+            course.attributes,
+            course.kind,
+            course.general_category,
+        ])
+
+    return JsonResponse({
+        "status": "SUCCESS",
+        "data": res,
+    })
 
 
 # Redis

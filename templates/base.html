@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{% static '/css/bootstrap.css' %}" type="text/css"></link>
     <script src="https://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
     <script type="text/javascript" src="{% static '/js/bootstrap.js' %}"></script>
+    <script crossorigin="anonymous" integrity="sha512-cO/G0T0drTsOW6uuK119iEWlPqYRxK1bNYWK80HmJbfiEwwc3L6a8p7Oj0EUWxz7wcCq4tgGwLxqCif0Y7kKMg==" src="https://lib.baomitu.com/echarts/5.1.0/echarts.common.js"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -33,10 +34,10 @@
             <li class="nav-item {% if timetable_page %}active{% endif %}">
                 <a class="nav-link" href="{% url 'timetable' %}">课表</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" href="#">课程</a>
+            <li class="nav-item {% if courses_page %}active{% endif %}">
+                <a class="nav-link " href="{% url 'courses' %}">课程</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item {% if report_page %}active{% endif %}">
                 <a class="nav-link" href="{% url 'report' %}">每日报备</a>
             </li>
             {#            <li class="nav-item">#}

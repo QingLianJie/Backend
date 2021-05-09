@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load my_tags %}
+{% block content %}
+    <div class="collapse show" id="refresh_progress">
+        <div class="progress">
+            <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+                 class="progress-bar progress-bar-striped progress-bar-animated"
+                 style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <div class="main container mt-2 ">
+        <div class="row">
+            <div class="col-12 my-3">
+                <form class="" method="get">
+                    <div role="group" class="input-group"><!---->
+                        <input type="text" name="s" placeholder="搜索课程名" class="form-control">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-info"><span>搜索</span></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 mb-3">
+                <div class="list-group">
+                    {% for name,course_id,num in page.object_list %}
+                        <a href="/course/{{ course_id }}"
+                           class="list-group-item list-complete-item list-group-item-action list-complete-enter-to">
+                            {{ name }}
+                            <span class="badge float-right badge-secondary">{{ num }} 人学过</span>
+                        </a>
+                    {% empty %}
+                        <div class="alert alert-danger col-12" role="alert">
+                            没找到相关课程QAQ
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-12 mb-3 text-center">
+                <nav>
+                    <ul class="pagination pagination-centered justify-content-center">
+
+                        {% ifequal page.number 1 %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="?page=1{% if s %}&s={{ s }}{% endif %}">
+                                <<
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if s %}&s={{ s }}{% endif %}">
+                                <<
+                            </a>
+                        </li>
+                        {% endifequal %}
+
+
+                        {% if page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.previous_page_number }}{% if s %}&s={{ s }}{% endif %}"> < </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"> < </a>
+                        </li>
+                        {% endif %}
+
+                        {% if pre %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">
+                                ...
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for i in list_page%}
+                            <li class="page-item {% ifequal i  page.number%}active{% endifequal %}">
+                                <a class="page-link" href="?page={{ i }}{% if s %}&s={{ s }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endfor %}
+
+                        {% if next %}
+                        <li class="page-item disabled">
+                            <a class="page-link " href="#">
+                                ...
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% if page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.next_page_number }}{% if s %}&s={{ s }}{% endif %}"> > </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"> > </a>
+                        </li>
+                        {% endif %}
+
+                        {% ifequal page.number page.paginator.num_pages %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="?page={{ page.paginator.num_pages }}{% if s %}&s={{ s }}{% endif %}">
+                                >>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.paginator.num_pages }}{% if s %}&s={{ s }}{% endif %}">
+                                >>
+                            </a>
+                        </li>
+                        {% endifequal %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function () {
+            $('#refresh_progress').collapse('hide');
+
+
+        }
+    </script>
+{% endblock %}
