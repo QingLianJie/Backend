@@ -22,8 +22,18 @@
                     </div>
                 </form>
             </div>
+            <div class="col-12">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                    <a class="nav-link active" id="all_courses" href="#">所有课程</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" id="learned_courses" href="#">我学过的</a>
+                    </li>
+                </ul>
+            </div>
 
-            <div class="col-12 mb-3">
+            <div class="col-12 mb-3" id="all_courses_content">
                 <div class="list-group">
                     {% for name,course_id,num in page.object_list %}
                         <a href="/course/{{ course_id }}"
@@ -32,14 +42,13 @@
                             <span class="badge float-right badge-secondary">{{ num }} 人学过</span>
                         </a>
                     {% empty %}
-                        <div class="alert alert-danger col-12" role="alert">
+                        <div class="alert alert-danger col-12 mt-2" role="alert">
                             没找到相关课程QAQ
                         </div>
                     {% endfor %}
                 </div>
             </div>
-
-            <div class="col-12 mb-3 text-center">
+            <div class="col-12 mb-3 text-center" id="coures_pagination">
                 <nav>
                     <ul class="pagination pagination-centered justify-content-center">
 
@@ -118,12 +127,45 @@
                     </ul>
                 </nav>
             </div>
+
+            <div class="col-12 mb-3" id="learned_courses_content">
+                <div class="list-group">
+                    {% for course in learned %}
+                        <a href="/course/{{ course.course_id }}"
+                           class="list-group-item list-complete-item list-group-item-action list-complete-enter-to">
+                            {{ course.name }}
+                            <span class="badge float-right badge-secondary">{{ course.num }} 人学过</span>
+                        </a>
+                    {% empty %}
+                        <div class="alert alert-danger col-12 mt-2" role="alert">
+                            没找到相关课程QAQ
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
     <script>
         window.onload = function () {
             $('#refresh_progress').collapse('hide');
 
+            $('#learned_courses_content').hide()
+
+            $('#all_courses').click(function () {
+                $('#learned_courses').removeClass('active');
+                $('#all_courses').addClass('active');
+                $('#all_courses_content').show();
+                $('#coures_pagination').show();
+                $('#learned_courses_content').hide();
+            });
+
+            $('#learned_courses').click(function () {
+                $('#all_courses').removeClass('active');
+                $('#learned_courses').addClass('active');
+                $('#all_courses_content').hide();
+                $('#coures_pagination').hide();
+                $('#learned_courses_content').show();
+            });
 
         }
     </script>

@@ -4,3 +4,4 @@ from api.models import *
 admin.site.register(HEUAccountInfo)
 admin.site.register(CourseScore)
 admin.site.register(CourseInfo)
+admin.site.register(CourseComment)

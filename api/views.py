@@ -2,12 +2,15 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from api.models import HEUAccountInfo, CourseScore, CourseInfo
+from api.models import HEUAccountInfo, CourseScore, CourseInfo, CourseComment
 from api import tasks
 from django_redis import get_redis_connection
 from qinglianjie.settings import QUERY_INTERVAL
 from api.tasks import *
+from django.views.generic import View
+from django.utils import timezone
 import lib.heu, time, json
+from django.views.decorators.csrf import csrf_exempt
 
 
 # def index(request):
@@ -244,6 +247,97 @@ def query_course_info(request):
         "status": "SUCCESS",
         "data": res,
     })
+
+
+class CourseCommentView(View):
+    def get(self, request):
+        course_id = request.GET.get("course_id")
+
+        if course_id is None:
+            return JsonResponse({
+                "data": [
+                    [comment.user.username,
+                     comment.course.course_id,
+                     comment.course.name,
+                     comment.created,
+                     comment.content,
+                ] for comment in CourseComment.objects.all()],
+            })
+
+        try:
+            course = CourseInfo.objects.get(course_id=course_id)
+        except Exception as e:
+            return JsonResponse({
+                "status": 404,
+                "message": "无效课程号",
+            }, status=404)
+
+        return JsonResponse({
+            "data": [
+                [comment.user.username,
+                 comment.course.course_id,
+                 comment.course.name,
+                 comment.created,
+                 comment.content,
+                 ] for comment in CourseComment.objects.filter(course=CourseInfo.objects.get(course_id=course_id))],
+        })
+
+    def post(self, request):
+        user_id = request.session["_auth_user_id"]
+        if user_id is None:
+            return JsonResponse({
+                "status": 401,
+                "message": "请先登录",
+            }, status=401)
+        user = User.objects.get(id=user_id)
+
+        #print(request.FORM)
+        print(request.POST)
+        print(request.GET)
+        course_id = request.POST.get("course_id")
+        print("fuck")
+        print(course_id)
+        try:
+            course = CourseInfo.objects.get(course_id=course_id)
+        except Exception as e:
+            print(e)
+            return JsonResponse({
+                "status": 404,
+                "message": "无效课程号",
+            }, status=404)
+
+        content = request.POST.get("content")
+        if content is None or len(content) == 0:
+            return JsonResponse({
+                "status": 400,
+                "message": "评论内容不能为空",
+            }, status=400)
+        if len(content) > 100:
+            return JsonResponse({
+                "status": 400,
+                "message": "评论字数限制在100字以内",
+            }, status=400)
+
+        if CourseComment.objects.filter(user=user).count() != 0:
+            last_comment_time = CourseComment.objects.filter(user=user).first().created
+            delta = timezone.now() - last_comment_time
+            print(last_comment_time, delta.total_seconds())
+            if delta.total_seconds() <= 1*60:
+                return JsonResponse({
+                    "status": 400,
+                    "message": "评论间隔限制为5分钟",
+                }, status=400)
+
+        CourseComment.objects.create(
+            user=user,
+            content=content,
+            course=course,
+        ).save()
+
+        return JsonResponse({
+            "status": 201,
+            "message": "评论成功",
+        }, status=201)
 
 
 # Redis

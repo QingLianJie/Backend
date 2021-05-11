@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from datetime import datetime,timedelta
-from api.models import HEUAccountInfo, CourseInfo, CourseScore
+from api.models import HEUAccountInfo, CourseInfo, CourseScore, CourseComment
 from frontend.models import Article
 from django.core.paginator import Paginator
 import json, lib
@@ -49,7 +49,7 @@ def scores(request):
                 term = record[1]
                 if scores_dict.get(term) is None:
                     scores_dict[term] = []
-                scores_dict[term].append([len(scores_dict[term])+1,record[3],record[4],record[5]])
+                scores_dict[term].append([len(scores_dict[term])+1,record[3],record[4],record[5],record[2]])
             scores_list = list(scores_dict.items())
             scores_list.reverse()
     return render(request, 'scores.html', {
@@ -111,6 +111,7 @@ def bind(request):
     username = user_info.heu_username
     # TODO change request method from GET to POST
     if request.method == "POST":
+        print(request.POST)
         user_id = request.session["_auth_user_id"]
         user_info = HEUAccountInfo.objects.get_or_create(user=User.objects.get(id=user_id))[0]
         # TODO change request method from GET to POST
@@ -177,6 +178,8 @@ def report(request):
         return redirect(reverse("bind"))
 
     if request.method == "POST":
+        print(request.POST)
+
         if request.POST.get("action") == "on":
             user_info.report_daily = True
             user_info.save()
@@ -205,6 +208,9 @@ def courses(request):
     else:
         all_courses = CourseInfo.objects.all()
 
+    all_courses = list(all_courses)
+    all_courses.sort(key=lambda course:CourseScore.objects.filter(course=course).count(), reverse=True)
+
     paginator = Paginator(
         [[course.name, course.course_id, CourseScore.objects.filter(course=course).count()]
             for course in all_courses],
@@ -224,6 +230,15 @@ def courses(request):
         if i+page_num>=1 and i+page_num<=paginator.num_pages:
             list_page.append(i+page_num)
 
+    learned = None
+    if not(request.session.get('_auth_user_id') is None):
+        user_id = request.session["_auth_user_id"]
+        user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
+        heu_username = user_info.heu_username
+        learned = set([record.course for record in CourseScore.objects.filter(heu_username=heu_username)])
+        for course in learned:
+            course.num = CourseScore.objects.filter(course=course).count()
+
     return render(request, "courses.html", {
         'courses_page': True,
         'page': paginator.page(page_num),
@@ -233,15 +248,31 @@ def courses(request):
         's': request.GET.get('s'),
         'username': get_username(request),
         'login': not (request.session.get('_auth_user_id') is None),
+        'learned': learned,
     })
 
 
 def course(request, course_id):
     course = CourseInfo.objects.get(course_id=course_id)
+    heu_username = None
+    if not(request.session.get('_auth_user_id') is None):
+        user_id = request.session["_auth_user_id"]
+        user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
+        heu_username = user_info.heu_username
     return render(request, "course.html", {
         "course_id": course_id,
         "course": course,
         "count": CourseScore.objects.filter(course=course).count(),
         'username': get_username(request),
         'login': not (request.session.get('_auth_user_id') is None),
+        'comments': [{
+            "username": comment.user.username,
+            "course_id": comment.course.course_id,
+            "course_name": comment.course.name,
+            "created": comment.created,
+            "content": comment.content,
+         } for comment in CourseComment.objects.filter(course=course)],
+        "score": CourseScore.objects.filter(course=course,heu_username=heu_username)[0].score if
+            not(heu_username is None) and
+            CourseScore.objects.filter(course=course,heu_username=heu_username).count()!=0 else None,
     })

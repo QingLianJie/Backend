@@ -23,14 +23,14 @@
                 </div>
                 <div class="card-body">
                 {% if report %}
-                    <p>您已开启每日自动进行出校报备，是否关闭？</p>
+                    <p>您已开启每日自动进出校报备，是否关闭？</p>
                     <form class="login form-group mb-0" method="POST" action="{% url 'report' %}">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="off">
                         <button class="primaryAction btn btn-danger btn-block" type="submit">关闭</button>
                     </form>
                 {% else %}
-                    <p>开启后将在每天 0:05 进行出校报备，时间为当日 6:00 ~ 10:00，是否开启？</p>
+                    <p>开启后将在每天 0:05 自动进出校报备，时间为当日 6:00 ~ 22:00，是否开启？</p>
                     <form class="login form-group mb-0" method="POST" action="{% url 'report' %}">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="on">

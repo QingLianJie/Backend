@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load my_tags %}
 {% block content %}
+
+    {% csrf_token %}
+
     <div class="collapse show" id="refresh_progress">
         <div class="progress">
             <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
@@ -29,8 +32,13 @@
                     </div>
                     <hr class="my-2">
                     <p class="card-text">
-                        <span class="mr-5"> 挂科率： <span id="fail" class="text-danger">0.00%</span></span>
-                        <span> 优秀率： <span id="great" class="text-success">34.00%</span></span>
+                        <span class="mr-3"> 挂科率： <span id="fail" class="text-danger">0.00%</span></span>
+                        <span class="mr-3"> 优秀率： <span id="great" class="text-success">34.00%</span></span>
+                        {% if score %}
+                        <span>你的分数：{{ score }}</span>
+                        {% else %}
+                        <span>你还没学过这门课</span>
+                        {% endif %}
                         <br>
                         <span class="mr-3">学分：{{ course.credit }}</span>
                         <span class="mr-3">总学时：{{ course.total_time }}</span><br class="d-block d-sm-none">
@@ -54,12 +62,77 @@
             <div class="col-lg-4 col-md-12 mb-3 mt-2">
                 <div class="card p-3">
                     <h5>
-                        评论功能暂未上线
+                        课程评论
                     </h5>
+
                     <hr class="my-2">
+
+                    {% for comment in comments %}
+                    <div class="row mx-0 mb-3">
+                        <div class="mx-0 col-12 px-0">
+                            <span style="font-size: 0.95rem;" class="mr-1">
+                                {{ comment.username }}
+                            </span>
+                            <small class="text-muted">
+                                {{ comment.created.year }}-{{ comment.created.month }}-{{ comment.created.day }}
+                            </small>
+                        </div>
+                        <div class="col-12 mx-0 px-0">
+                            <div class="card bg-light  d-inline-block" style="max-width: 100%;">
+                                <div class="card-body px-2 py-1 d-inline-block" style="max-width: 100%;">
+                                    {{ comment.content }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="row mx-0 mb-3 mt-1">
+                        暂无评论
+                    </div>
+                    {% endfor %}
+
+                    <hr class="my-2">
+                    <div class="col-12 mx-0 mt-1 px-0">
+                        {% if login %}
+                        <span class="mr-3 font-weight-bold">
+                                {{ username }}
+                        </span>
+                        <div id="comment_form">
+
+                            <div role="group" class="input-group"><!---->
+                                <input type="text" name="content" placeholder="发送评论" class="form-control">
+                                <div class="input-group-append">
+                                    <button id="send_comment" class="btn btn-info"><span>发送</span></button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                            登陆后评论
+                        {% endif %}
+                    </div>
+
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <div class="modal fade" id="normalModal" tabindex="-1" aria-labelledby="normalModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modal_close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modal_button">确认</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -77,8 +150,8 @@
             option = {
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {            // 坐标轴指示器，坐标轴触发有效
-                        type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    axisPointer: {
+                        type: 'shadow'
                     }
                 },
                 grid: {
@@ -191,6 +264,35 @@
                 graph1.hidden = !graph1.hidden;
             })
 
+            $('#send_comment').click(function(){
+                //alert("test");
+                $.post(
+                    "{% url 'course_comment' %}",
+                    //type:"POST",
+                    //headers: {'X-CSRFToken': '{{ csrf_token  }}'},
+                    {
+                        csrfmiddlewaretoken: '{{ csrf_token  }}',
+                        content: document.querySelector("#comment_form > div > input[name=content]").value,
+                        course_id: '{{ course_id }}',
+                    },
+                    //ontentType:"application/json; charset=utf-8",
+                    //dataType:"json",
+                    function(res){
+                        console.log(res);
+                        console.log(res.status);
+                        $('#modalContent')[0].innerText = res.message;
+                        $('#normalModal').modal('show');
+                        $('#modal_button').click(function(){
+                            location.reload();
+                        })
+                    }
+                ).error(function(res) {
+                    //alert("error");
+                    console.log(res);
+                    $('#modalContent')[0].innerText = res.responseJSON.message;
+                    $('#normalModal').modal('show');
+                })
+            })
         }
     </script>
 {% endblock %}

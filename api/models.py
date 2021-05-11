@@ -1,7 +1,6 @@
 from django.db import models
-
-from django.db import models
 from django.contrib.auth import settings
+from django.utils import timezone
 
 
 class HEUAccountInfo(models.Model):
@@ -45,3 +44,14 @@ class CourseScore(models.Model):
 
     def __str__(self):
         return " ".join([self.heu_username,str(self.course),self.score])
+
+
+#课程评论
+class CourseComment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    course = models.ForeignKey(CourseInfo, on_delete=models.DO_NOTHING)
+    content = models.TextField(max_length=100)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ('-created',)

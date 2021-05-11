@@ -13,4 +13,6 @@ urlpatterns = [
     path('query/courses', views.query_course_info, name="query_courses"),
     #path('heu/update', views.update_heu_accounts, name="update_heu_accounts"),
     #path('heu/remove', views.remove_heu_accounts, name="remove_heu_accounts"),
+
+    path('course/comment', views.CourseCommentView.as_view(), name="course_comment"),
 ]
