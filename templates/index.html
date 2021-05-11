@@ -13,6 +13,24 @@
     <div class="main container mt-2 ">
         <div class="row">
             <div class="mb-3 col-md-12 col-lg-8">
+
+                <div class="card mt-3 p-3">
+                        <span class="font-weight-bold form-inline">
+                        <h4>最新最热课程评论</h4>
+                        </span>
+                        <hr class="my-2">
+                        {% for comment in comments %}
+                        <a class="card bg-light px-2 py-2 mt-3 mx-0 mb-2" href="/course/{{ comment.course_id }}" style="text-decoration:none;">
+                            <span class="text-dark px-1">
+                                {{ comment.course_name }} {{ comment.username }} {{ comment.created }}
+                            </span>
+                            <h5 class="card-body text-dark pt-2 pb-1 px-1">
+                                {{ comment.content }}
+                            </h5>
+                        </a>
+                        {% endfor %}
+                </div>
+
                 {% for post in posts %}
                     <div class="card p-3 mt-3">
                         <span class="font-weight-bold form-inline">
@@ -23,18 +41,6 @@
                         <p>{{ post.body | to_markdown | safe}}</p>
                     </div>
                 {% endfor %}
-                <div class="card px-2 py-2 mt-3 pb-3">
-                    <div class="card bg-light p-3 mt-3 mx-2 ">
-                        <div class="card-body">
-                            test
-                        </div>
-                    </div>
-                    <div class="card bg-light p-3 mt-3 mx-2">
-                        <div class="card-body">
-                            test
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="mb-3 col-md-12 col-lg-4">
                 <div class="card p-3 mt-3">

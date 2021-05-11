@@ -30,6 +30,13 @@ def index(request):
         'index_page': True,
         'username': get_username(request),
         'posts': Article.objects.all(),
+        'comments': [{
+            "username": comment.user.username,
+            "course_id": comment.course.course_id,
+            "course_name": comment.course.name,
+            "created": comment.created,
+            "content": comment.content,
+        } for comment in CourseComment.objects.all()[:5]],
     })
 
 
