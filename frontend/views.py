@@ -8,6 +8,8 @@ from datetime import datetime,timedelta
 from api.models import HEUAccountInfo, CourseInfo, CourseScore, CourseComment
 from frontend.models import Article
 from django.core.paginator import Paginator
+from django.views.decorators.cache import cache_page
+from functools import wraps
 import json, lib
 
 
@@ -208,7 +210,20 @@ def report(request):
     })
 
 
+def cache_on_user(timeout):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            return cache_page(timeout, key_prefix="_auth_%s_" % int(request.session["_auth_user_id"])
+            if not (request.session.get("_auth_user_id") is None) else "anonymous")(view_func)(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
+
+
+@cache_on_user(3600*12*12)
 def courses(request):
+    print("test")
+
     all_courses = None
     if "s" in request.GET:
         all_courses = CourseInfo.objects.filter(name__icontains=request.GET.get("s"))
