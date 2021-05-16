@@ -60,7 +60,14 @@ def collect_scores():
     django.setup()
     for info in HEUAccountInfo.objects.filter(account_verify_status=True):
         heu_username = info.heu_username
-        scores = query_scores(info.heu_username, info.heu_password)
+        heu_password = info.heu_password
+        try:
+            crawler = Crawler()
+            crawler.login(info.heu_username, info.heu_password)
+            scores = crawler.getScores()()
+        except Exception as e:
+            continue
+
         for record in scores:
             course_id = record[2]
             name = record[3]
