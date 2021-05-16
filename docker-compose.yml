@@ -33,7 +33,12 @@ services:
     #command: python manage.py runserver 0:8000
     ports:
       - "80:8000"
-    command: uwsgi --ini uwsgi.ini
+    command:
+      - sh
+      - -c 
+      - |
+         python /code/manage.py migrate
+         uwsgi --ini uwsgi.ini
     working_dir: /code/web
     volumes:
       - .:/code

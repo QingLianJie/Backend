@@ -231,7 +231,7 @@ def courses(request):
         all_courses = CourseInfo.objects.all()
 
     all_courses = list(all_courses)
-    all_courses.sort(key=lambda course:CourseScore.objects.filter(course=course).count(), reverse=True)
+    #all_courses.sort(key=lambda course:CourseScore.objects.filter(course=course).count(), reverse=True)
 
     paginator = Paginator(
         [[course.name, course.course_id, course.count]
@@ -257,7 +257,7 @@ def courses(request):
         user_id = request.session["_auth_user_id"]
         user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
         heu_username = user_info.heu_username
-        learned = set([record.course for record in CourseScore.objects.filter(heu_username=heu_username)])
+        learned = [record.course for record in CourseScore.objects.filter(heu_username=heu_username)]
         for course in learned:
             course.num = course.count
 
