@@ -220,7 +220,7 @@ def cache_on_user(timeout):
     return decorator
 
 
-@cache_on_user(3600*12*12)
+#@cache_on_user(3600*12*12)
 def courses(request):
     print("test")
 

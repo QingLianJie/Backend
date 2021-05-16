@@ -25,11 +25,15 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "auto_report": {
         "task": "api.tasks.report_daily",
-        "schedule": crontab(hour=0, minute=5),
+        "schedule": crontab(hour=0, minute=30),
     },
     "auto_collect": {
         "task": "api.tasks.collect_scores",
-        "schedule": crontab(hour=6, minute=0),
+        "schedule": crontab(hour=1, minute=30),
+    },
+    "auto_count_courses": {
+        "task": "api.tasks.count_courses",
+        "schedule": crontab(hour=2, minute=0),
     }
 }
 
