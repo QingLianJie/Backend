@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import settings
 from django.utils import timezone
+import json
 
 
 class HEUAccountInfo(models.Model):
@@ -31,6 +32,8 @@ class CourseInfo(models.Model):
     kind = models.CharField(max_length=100)
     #通识类别
     general_category = models.CharField(max_length=100)
+    #参与统计人数
+    count = models.IntegerField(default=0)
 
     def __str__(self):
         return " ".join([str(self.course_id),self.name])
@@ -52,6 +55,38 @@ class CourseComment(models.Model):
     course = models.ForeignKey(CourseInfo, on_delete=models.DO_NOTHING)
     content = models.TextField(max_length=100)
     created = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ('-created',)
+
+
+class ScoreQueryResult(models.Model):
+    heu_username = models.CharField(max_length=100)
+    result = models.TextField(default="")
+    created = models.DateTimeField(default=timezone.now)
+    fail = models.BooleanField(default=False)
+
+    def set_result(self, value):
+        self.result = json.jumps(value)
+
+    def get_result(self):
+        return json.loads(self.result)
+
+    class Meta:
+        ordering = ('-created',)
+
+
+class TimetableQueryResult(models.Model):
+    heu_username = models.CharField(max_length=100)
+    result = models.TextField(default="")
+    created = models.DateTimeField(default=timezone.now)
+    fail = models.BooleanField(default=False)
+
+    def set_result(self, value):
+        self.result = json.jumps(value)
+
+    def get_result(self):
+        return json.loads(self.result)
 
     class Meta:
         ordering = ('-created',)

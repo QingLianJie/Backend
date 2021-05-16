@@ -52,9 +52,9 @@ def scores(request):
     if type(result) is JsonResponse:
         json_data = json.loads(result.content)
         if json_data['status'] == 'SUCCESS':
-            date = json_data['date_done']
+            date = json_data['date']
             fail = False
-            for record in json_data['result']:
+            for record in json_data['data']:
                 term = record[1]
                 if scores_dict.get(term) is None:
                     scores_dict[term] = []
@@ -89,9 +89,9 @@ def timetable(request):
     if type(result) is JsonResponse:
         json_data = json.loads(result.content)
         if json_data['status'] == 'SUCCESS':
-            date = json_data['date_done']
+            date = json_data['date']
             fail = False
-            temp = json_data['result']
+            temp = json_data['data']
             timetable_list = []
             for i in range(len(temp)):
                 t = []
@@ -234,7 +234,7 @@ def courses(request):
     all_courses.sort(key=lambda course:CourseScore.objects.filter(course=course).count(), reverse=True)
 
     paginator = Paginator(
-        [[course.name, course.course_id, CourseScore.objects.filter(course=course).count()]
+        [[course.name, course.course_id, course.count]
             for course in all_courses],
         20,
     )
@@ -259,7 +259,7 @@ def courses(request):
         heu_username = user_info.heu_username
         learned = set([record.course for record in CourseScore.objects.filter(heu_username=heu_username)])
         for course in learned:
-            course.num = CourseScore.objects.filter(course=course).count()
+            course.num = course.count
 
     return render(request, "courses.html", {
         'courses_page': True,

@@ -104,14 +104,21 @@ def remove_heu_accounts(request):
 def query_scores(request):
     user_id = request.session["_auth_user_id"]
     user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
+    username = user_info.heu_username
+    password = user_info.heu_password
     try:
-        conn = get_redis_connection('default')
-        # res = json.loads(conn.get("celery-task-meta-" + request.session["refresh_scores_task_id"]))
-        res = json.loads(conn.get("celery-task-meta-"+str(conn.get(user_id+"refresh_scores_task_id"), encoding="utf-8")))
+        print(type(ScoreQueryResult.objects.get(heu_username=username).result))
+        res = ScoreQueryResult.objects.get(heu_username=username)
+        date = res.created
+        data = json.loads(res.result)
     except Exception as e:
         print(e)
         return JsonResponse({"status": "FAILURE"})
-    return JsonResponse(res)
+    return JsonResponse({
+        'status': 'SUCCESS',
+        'date': date,
+        'data': data,
+    })
 
 
 @login_required
@@ -126,18 +133,6 @@ def refresh_scores(request):
         res = tasks.query_scores.delay(username, password)
         print(username, password)
         request.session["last_refresh_scores_time"] = time.time()
-        conn = get_redis_connection('default')
-        # last_task_id = request.session.get("refresh_scores_task_id")
-        last_task_id = None
-        try:
-            last_task_id = str(conn.get(user_id+"refresh_scores_task_id") , encoding="utf-8")
-        except:
-            pass
-        print(last_task_id)
-        if not (last_task_id is None):
-            remove_last_task_id(last_task_id)
-        # request.session["refresh_scores_task_id"] = res.task_id
-        conn.set(user_id+"refresh_scores_task_id", res.task_id)
     else:
         return JsonResponse({"status": "FAILURE", "message": "Query interval too short!"})
     return JsonResponse({"status": "SUCCESS"})
@@ -148,14 +143,21 @@ def refresh_scores(request):
 def query_time_table(request):
     user_id = request.session["_auth_user_id"]
     user_info = HEUAccountInfo.objects.get(user=User.objects.get(id=user_id))
+    username = user_info.heu_username
+    password = user_info.heu_password
     try:
-        conn = get_redis_connection('default')
-        # res = json.loads(conn.get("celery-task-meta-" + request.session["refresh_time_table_task_id"]))
-        res = json.loads(conn.get("celery-task-meta-"+str(conn.get(user_id+"refresh_time_table_task_id"), encoding="utf-8")))
-        print(res)
+        print(type(TimetableQueryResult.objects.get(heu_username=username).result))
+        res = TimetableQueryResult.objects.get(heu_username=username)
+        date = res.created
+        data = json.loads(res.result)
     except Exception as e:
+        print(e)
         return JsonResponse({"status": "FAILURE"})
-    return JsonResponse(res)
+    return JsonResponse({
+        'status': 'SUCCESS',
+        'date': date,
+        'data': data,
+    })
 
 
 @login_required
@@ -175,18 +177,6 @@ def refresh_time_table(request):
         password = user_info.heu_password
         res = tasks.query_time_table.delay(username, password, term)
         request.session["last_refresh_time_table_time"] = time.time()
-        conn = get_redis_connection('default')
-        # last_task_id = request.session.get("refresh_time_table_task_id")
-        last_task_id = None
-        try:
-            last_task_id = str(conn.get(user_id + "refresh_time_table_task_id"), encoding="utf-8")
-        except:
-            pass
-        if not (last_task_id is None):
-            remove_last_task_id(last_task_id)
-        # request.session["refresh_time_table_task_id"] = res.task_id
-        conn.set(user_id + "refresh_time_table_task_id", res.task_id)
-        # print(res.task_id)
     else:
         return JsonResponse({"status": "FAILURE", "message": "Query interval too short!"})
     return JsonResponse({"status": "SUCCESS"})
@@ -339,6 +329,10 @@ class CourseCommentView(View):
             "message": "评论成功",
         }, status=201)
 
+
+def course_count(request):
+    tasks.count_courses.delay()
+    return HttpResponse("ok")
 
 # Redis
 def remove_last_task_id(task_id):

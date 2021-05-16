@@ -1,30 +1,43 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from lib.heu import Crawler
-import os
+from api.models import HEUAccountInfo, CourseInfo, CourseScore, ScoreQueryResult, TimetableQueryResult
+import os, json, django
 
 
 @shared_task
 def query_scores(username:str, password:str):
-    crawler = Crawler()
-    #print(username, password)
-    crawler.login(username, password)
-    return crawler.getScores()
+    django.setup()
+    ScoreQueryResult.objects.filter(heu_username=username).delete()
+    try:
+        crawler = Crawler()
+        crawler.login(username, password)
+        ScoreQueryResult.objects.create(heu_username=username,result=json.dumps(crawler.getScores())).save()
+    except Exception as e:
+        ScoreQueryResult.objects.create(heu_username=username,fail=True).save()
+        print(e)
+        return "Fail"
+    return "Success"
 
 
 @shared_task
 def query_time_table(username:str, password:str, term:str):
-    crawler = Crawler()
-    crawler.login(username, password)
-    return crawler.getTermTimetable(term)
+    django.setup()
+    TimetableQueryResult.objects.filter(heu_username=username).delete()
+    try:
+        crawler = Crawler()
+        crawler.login(username, password)
+        TimetableQueryResult.objects.create(heu_username=username,result=json.dumps(crawler.getTermTimetable(term))).save()
+    except Exception as e:
+        TimetableQueryResult.objects.create(heu_username=username,fail=True).save()
+        print(e)
+        return "Fail"
+    return "Success"
 
 
 @shared_task
 def report_daily():
-    import django
     django.setup()
-    from api.models import HEUAccountInfo
-    #print(HEUAccountInfo.objects.all())
     for info in HEUAccountInfo.objects.filter(report_daily=True, account_verify_status=True):
         print(HEUAccountInfo.heu_username)
         do_report.delay(info.heu_username, info.heu_password)
@@ -37,17 +50,14 @@ def do_report(username:str, password:str):
         crawler = Crawler()
         crawler.login_one(username, password)
         crawler.report()
-        return "Ok"
+        return "Success"
     except Exception as e:
         return str(e)
 
 
 @shared_task
 def collect_scores():
-    import django
-    from api.models import HEUAccountInfo, CourseInfo, CourseScore
     django.setup()
-
     for info in HEUAccountInfo.objects.filter(account_verify_status=True):
         heu_username = info.heu_username
         scores = query_scores(info.heu_username, info.heu_password)
@@ -86,4 +96,14 @@ def collect_scores():
                     score=record[4],
                     term=record[1],
                 ).save()
-    return "Ok"
+    return "Success"
+
+
+#统计学过某课程的人数
+@shared_task
+def count_courses():
+    django.setup()
+    for course in CourseInfo.objects.all():
+        course.count = CourseScore.objects.filter(course=course).count()
+        course.save()
+    return "Success"

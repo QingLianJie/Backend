@@ -15,4 +15,5 @@ urlpatterns = [
     #path('heu/remove', views.remove_heu_accounts, name="remove_heu_accounts"),
 
     path('course/comment', views.CourseCommentView.as_view(), name="course_comment"),
+    path('course/count', views.course_count, name="course_count"),
 ]
