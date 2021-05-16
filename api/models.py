@@ -35,6 +35,9 @@ class CourseInfo(models.Model):
     #参与统计人数
     count = models.IntegerField(default=0)
 
+    class Meta:
+        ordering = ('-count',)
+
     def __str__(self):
         return " ".join([str(self.course_id),self.name])
 
