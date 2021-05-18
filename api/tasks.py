@@ -64,7 +64,7 @@ def collect_scores():
         try:
             crawler = Crawler()
             crawler.login(info.heu_username, info.heu_password)
-            scores = crawler.getScores()()
+            scores = crawler.getScores()
         except Exception as e:
             continue
 
