@@ -5,3 +5,4 @@
 chromedriver.exe
 celerybeat-*
 media
+/redis_data
