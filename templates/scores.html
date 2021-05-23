@@ -36,6 +36,17 @@
                     </div>
                 </div>
 
+                <div class="collapse" id="calc_average">
+                <div class="card px-2 pt-2 mt-3 pb-3 hide">
+                    <div class="card-body pb-0">
+                        选中的 <strong id="total_selected">0</strong> 门科目，学分总 <strong id="total_credit">0</strong>，加权分 <strong id="avg">0</strong>
+                        <hr>
+                    <button type="button" class="btn btn-success btn-sm" id="do_calc_avg" onclick="do_calc_avg()">计算</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="close_calc_average">关闭</button>
+                    </div>
+                </div>
+                </div>
+
                 {% if not fail %}
                     {% for term,records in scores %}
                         <div class="card mt-2 px-0 pb-0 pt-0">
@@ -47,7 +58,26 @@
                                 <table class="table">
                                     <thead>
                                     <tr>
-                                        <th scope="col">#</th>
+                                        <th scope="col" class="show_scores">#</th>
+                                        <th scope="col" class="show_calc_avg">
+                                            <div class="custom-control custom-checkbox">
+                                                <input
+                                                        type="checkbox"
+                                                        autocomplete="off"
+                                                        class="custom-control-input all"
+                                                        id="all_{{ term | format_term }}"
+                                                        value="off"
+                                                        term="{{ term | format_term }}"
+                                                >
+                                                <label class="custom-control-label"
+                                                       for="all_{{ term | format_term }}"
+                                                       term="{{ term | format_term }}"
+                                                >
+
+                                                    全选
+                                                </label>
+                                            </div>
+                                        </th>
                                         <th scope="col">课程名称</th>
                                         <th scope="col">成绩</th>
                                         <th scope="col">学分</th>
@@ -55,12 +85,29 @@
                                     </thead>
                                     <tbody>
                                     {% for i in records %}
+                                        {% ifnotequal i.2 "---"  %}
                                         <tr>
-                                            <th scope="row">{{ i.0 }}</th>
-                                            <td><a class="text-dark" href="/course/{{ i.4 }}">{{ i.1 }}<a/></td>
+                                            <td scope="row" class="show_scores">{{ i.0 }}</td>
+                                            <td scope="col" class="show_calc_avg">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input
+                                                            type="checkbox"
+                                                            autocomplete="off"
+                                                            class="custom-control-input avg_input input_{{ term | format_term }}"
+                                                            id="{{ term | format_term }}_{{ i.4 }}"
+                                                            score="{{ i.2 }}"
+                                                            credit="{{ i.3 }}"
+                                                            value="off"
+                                                    >
+                                                    <label class="custom-control-label" for="{{ term | format_term }}_{{ i.4 }}">
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td><a class="text-dark" href="/course/{{ i.4 }}">{{ i.1 }}</a></td>
                                             <td>{{ i.2 }}</td>
                                             <td>{{ i.3 }}</td>
                                         </tr>
+                                        {% endifnotequal %}
                                     {% endfor %}
                                     </tbody>
                                 </table>
@@ -102,6 +149,47 @@
     </div>
 
     <script>
+        function do_calc_avg() {
+            var inputs = $('.avg_input');
+            var total_credit = 0.0;
+            var avg_score = 0.0;
+            var total_selected = 0;
+            for(var i=0; i<inputs.length; ++i) {
+                var ele = inputs[i];
+                if(ele.checked) {
+                    //console.log(ele);
+                    total_credit += parseFloat(ele.getAttribute('credit'));
+                }
+            }
+            //console.log(total_credit);
+            for(var i=0; i<inputs.length; ++i) {
+                var ele = inputs[i];
+                var score_dict = {
+                    '优秀'  : 95,
+                    '良好'  : 85,
+                    '中等'  : 75,
+                    '及格'  : 65,
+                    '不及格' : 20,
+                }
+                var score = score_dict[ele.getAttribute('score')];
+                if(score==undefined){
+                    score = parseFloat(ele.getAttribute('score'));
+                }
+                if(ele.checked) {
+                    var credit = parseFloat(ele.getAttribute('credit'));
+                    avg_score += score*credit/total_credit;
+                    total_selected++;
+                }
+                {#console.log(ele,score)#}
+            }
+
+            $('#avg')[0].innerText = avg_score.toFixed(2);
+            $('#total_credit')[0].innerText = total_credit;
+            $('#total_selected')[0].innerText = total_selected;
+
+            console.log(avg_score);
+
+        }
         window.onload = function () {
 
             {#$('#main').collapse('show')#}
@@ -133,23 +221,47 @@
                         $('#refresh_progress').collapse('hide');
                     }
                 });
-            }
+            };
 
             //TODO 统计学分
             $('#count_credit')[0].onclick = function () {
                 $('#modalContent')[0].innerText = "还没写";
                 $('#normalModal').modal('show');
-            }
+            };
 
-            //TODO 计算加权平均分
+            //done
             $('#calc_avg')[0].onclick = function () {
-                $('#modalContent')[0].innerText = "还没写";
-                $('#normalModal').modal('show');
-            }
+                // $('#modalContent')[0].innerText = "还没写";
+                // $('#normalModal').modal('show');
+                $('#calc_average').collapse('show');
+                $('.show_scores').hide();
+                $('.show_calc_avg').show();
+            };
+
+            $('.all').change(function () {
+                var term = this.getAttribute('term');
+                var value = this.checked;
+                var inputs = $('.input_'+term);
+                for(var i=0; i<inputs.length; ++i)
+                    inputs[i].checked = value;
+                do_calc_avg();
+            });
+
+            $('.avg_input').change(function() {
+                do_calc_avg();
+            });
+
+            $('#close_calc_average').click(function(){
+                $('#calc_average').collapse('hide');
+                $('.show_scores').show();
+                $('.show_calc_avg').hide();
+            });
 
             {% if not fail %}
-                $('.score_table :first').collapse('show')
+                $('.score_table :first').collapse('show');
             {% endif %}
+
+            $('.show_calc_avg').hide();
         }
     </script>
 {% endblock %}
