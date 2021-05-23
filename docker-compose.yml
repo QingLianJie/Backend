@@ -50,7 +50,7 @@ services:
 
   celery:
     build: .
-    command: celery -A qinglianjie worker -B -l info
+    command: celery -A qinglianjie worker -B -l debug
     working_dir: /code
     volumes:
       - .:/code
