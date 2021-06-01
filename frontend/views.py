@@ -25,8 +25,6 @@ def format_date(string):
 
 
 def index(request):
-    #return render(request, "account/_login.html")
-
     return render(request, 'index.html',{
         'login': not (request.session.get('_auth_user_id') is None),
         'index_page': True,

@@ -74,6 +74,8 @@ class Crawler:
         )
         s = soup(res.text, features="html.parser")
         # print(s)
+        print(s)
+        print(res)
         for row in s.find(id="dataList").find_all("tr"):
             contents = []
             for td in row.find_all('td'):

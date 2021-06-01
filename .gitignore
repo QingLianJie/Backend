@@ -1,0 +1,7 @@
+/db.sqlite3
+/mysql
+/qinglianjie/settings.py
+*.pyc
+chromedriver.exe
+celerybeat-*
+media

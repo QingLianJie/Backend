@@ -53,6 +53,24 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="/bind">绑定学号</a>
+                        <a class="dropdown-item" href="/accounts/password/change/">修改密码</a>
+                        <a class="dropdown-item" href="/report">自动报备</a>
+                        <div class="dropdown-divider"></div>
+                        <form method="post" action="/accounts/logout/">
+                            {% csrf_token %}
+                            <button class="dropdown-item" href="#" type="submit">登出</button>
+                        </form>
+                    </div>
+                    </li>
+                {% elif user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        {{ user.username }}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="/bind">绑定学号</a>
+                        <a class="dropdown-item" href="/accounts/password/change/">修改密码</a>
                         <a class="dropdown-item" href="/report">自动报备</a>
                         <div class="dropdown-divider"></div>
                         <form method="post" action="/accounts/logout/">
@@ -72,6 +90,18 @@
         </ul>
     </div>
 </nav>
+
+{% if messages %}
+<div class="container mt-3 mb-0">
+    <div class="row">
+    {% for message in messages %}
+        <div class="alert alert-success col-12" role="alert">
+        {{ message }}
+        </div>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 {% block content %}
 {% endblock %}
