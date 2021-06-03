@@ -9,8 +9,10 @@ from qinglianjie.settings import QUERY_INTERVAL
 from api.tasks import *
 from django.views.generic import View
 from django.utils import timezone
-import lib.heu, time, json
 from django.views.decorators.csrf import csrf_exempt
+from qinglianjie.settings import COURSE_COMMENT_INTERVAL
+from django.http import QueryDict
+import lib.heu, time, json
 
 
 # def index(request):
@@ -239,19 +241,60 @@ def query_course_info(request):
     })
 
 
+@login_required
+def query_my_comment(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+    return JsonResponse({
+        "data": [{
+            "id": comment.id,
+            "username": comment.user.username,
+            "course_id": comment.course.course_id,
+            "course_name": comment.course.name,
+            "created": comment.created,
+            "content": comment.content,
+            "anonymous": comment.anonymous,
+        } for comment in CourseComment.objects.filter(user=user)],
+    })
+
+
+@login_required
+def remove_my_comment(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+
+    # DELETE = QueryDict(request.body)
+    comment_id = int(request.POST.get("id"))
+    comment = CourseComment.objects.get(id=comment_id)
+
+    if comment.user != user: #删除别人的评论？
+        return JsonResponse({
+            "status": 401,
+            "message": "不是你的评论，你想做什么？",
+        }, status=401)
+
+    comment.delete()
+    return JsonResponse({
+        "status": 204,
+        "message": "删除成功",
+    }, status=204)
+
+
 class CourseCommentView(View):
     def get(self, request):
         course_id = request.GET.get("course_id")
 
         if course_id is None:
             return JsonResponse({
-                "data": [
-                    [comment.user.username,
-                     comment.course.course_id,
-                     comment.course.name,
-                     comment.created,
-                     comment.content,
-                ] for comment in CourseComment.objects.all()],
+                "data": [{
+                    "id": comment.id,
+                    "username": comment.user.username if not comment.anonymous else "匿名",
+                    "course_id": comment.course.course_id,
+                    "course_name": comment.course.name,
+                    "created": comment.created,
+                    "content": comment.content,
+                    "anonymous": comment.anonymous,
+                } for comment in CourseComment.objects.all()],
             })
 
         try:
@@ -263,13 +306,15 @@ class CourseCommentView(View):
             }, status=404)
 
         return JsonResponse({
-            "data": [
-                [comment.user.username,
-                 comment.course.course_id,
-                 comment.course.name,
-                 comment.created,
-                 comment.content,
-                 ] for comment in CourseComment.objects.filter(course=CourseInfo.objects.get(course_id=course_id))],
+            "data": [{
+                "id": comment.id,
+                "username": comment.user.username if not comment.anonymous else "匿名",
+                "course_id": comment.course.course_id,
+                "course_name": comment.course.name,
+                "created": comment.created,
+                "content": comment.content,
+                "anonymous": comment.anonymous,
+            } for comment in CourseComment.objects.filter(course=CourseInfo.objects.get(course_id=course_id))],
         })
 
     def post(self, request):
@@ -281,12 +326,11 @@ class CourseCommentView(View):
             }, status=401)
         user = User.objects.get(id=user_id)
 
-        #print(request.FORM)
-        print(request.POST)
-        print(request.GET)
+        # print(request.FORM)
+        # print(request.POST)
+        # print(request.GET)
         course_id = request.POST.get("course_id")
-        print("fuck")
-        print(course_id)
+        # print(course_id)
         try:
             course = CourseInfo.objects.get(course_id=course_id)
         except Exception as e:
@@ -312,16 +356,18 @@ class CourseCommentView(View):
             last_comment_time = CourseComment.objects.filter(user=user).first().created
             delta = timezone.now() - last_comment_time
             print(last_comment_time, delta.total_seconds())
-            if delta.total_seconds() <= 1*60:
+            if delta.total_seconds() <= COURSE_COMMENT_INTERVAL:
                 return JsonResponse({
                     "status": 400,
-                    "message": "评论间隔限制为5分钟",
+                    "message": "评论间隔限制为 %s 秒" % str(COURSE_COMMENT_INTERVAL),
                 }, status=400)
 
+        anonymous = bool(request.POST.get("anonymous") == "true")
         CourseComment.objects.create(
             user=user,
             content=content,
             course=course,
+            anonymous=anonymous,
         ).save()
 
         return JsonResponse({

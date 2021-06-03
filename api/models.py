@@ -58,6 +58,7 @@ class CourseComment(models.Model):
     course = models.ForeignKey(CourseInfo, on_delete=models.DO_NOTHING)
     content = models.TextField(max_length=100)
     created = models.DateTimeField(default=timezone.now)
+    anonymous = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('-created',)

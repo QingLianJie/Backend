@@ -94,12 +94,17 @@
                     <hr class="my-2">
                     <div class="col-12 mx-0 mt-1 px-0">
                         {% if login %}
-                        <span class="mr-3 font-weight-bold">
-                                {{ username }}
+                        <span class="mr-1 font-weight-bold float-left">
+                                {{ username }} / 匿名
                         </span>
-                        <div id="comment_form">
+                        <div class="custom-control custom-checkbox float-left">
 
-                            <div role="group" class="input-group"><!---->
+                            <input type="checkbox" autocomplete="off" class="custom-control-input anonymous" id="anonymous" score="80" credit="2.5" value="off">
+                            <label class="custom-control-label" for="anonymous">
+                            </label>
+                        </div>
+                        <div id="comment_form">
+                            <div role="group" class="input-group">
                                 <input type="text" name="content" placeholder="发送评论" class="form-control">
                                 <div class="input-group-append">
                                     <button id="send_comment" class="btn btn-info"><span>发送</span></button>
@@ -266,6 +271,7 @@
 
             $('#send_comment').click(function(){
                 //alert("test");
+                console.log($('#anonymous')[0].checked);
                 $.post(
                     "{% url 'course_comment' %}",
                     //type:"POST",
@@ -274,6 +280,7 @@
                         csrfmiddlewaretoken: '{{ csrf_token  }}',
                         content: document.querySelector("#comment_form > div > input[name=content]").value,
                         course_id: '{{ course_id }}',
+                        anonymous: $('#anonymous')[0].checked,
                     },
                     //ontentType:"application/json; charset=utf-8",
                     //dataType:"json",

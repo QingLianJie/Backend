@@ -31,7 +31,7 @@ def index(request):
         'username': get_username(request),
         'posts': Article.objects.all(),
         'comments': [{
-            "username": comment.user.username,
+            "username": comment.user.username if not comment.anonymous else "匿名",
             "course_id": comment.course.course_id,
             "course_name": comment.course.name,
             "created": comment.created,
@@ -286,13 +286,31 @@ def course(request, course_id):
         'username': get_username(request),
         'login': not (request.session.get('_auth_user_id') is None),
         'comments': [{
-            "username": comment.user.username,
+            "username": comment.user.username if not comment.anonymous else "匿名",
             "course_id": comment.course.course_id,
             "course_name": comment.course.name,
             "created": comment.created,
             "content": comment.content,
+            "anonymous": comment.anonymous,
          } for comment in CourseComment.objects.filter(course=course)],
         "score": CourseScore.objects.filter(course=course,heu_username=heu_username)[0].score if
             not(heu_username is None) and
             CourseScore.objects.filter(course=course,heu_username=heu_username).count()!=0 else None,
+    })
+
+
+@login_required
+def profile(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+    return render(request, "profile.html", {
+        'comments': [{
+            "username": comment.user.username if not comment.anonymous else "匿名",
+            "course_id": comment.course.course_id,
+            "course_name": comment.course.name,
+            "created": comment.created,
+            "content": comment.content,
+            "anonymous": comment.anonymous,
+            "id": comment.id,
+        } for comment in CourseComment.objects.filter(user=user)],
     })
