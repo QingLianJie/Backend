@@ -10,6 +10,7 @@ class HEUAccountInfo(models.Model):
     heu_password = models.CharField(max_length=100)
     account_verify_status = models.BooleanField(default=False)
     report_daily = models.BooleanField(default=False)
+    first_time_collect_scores = models.BooleanField(default=True)
 
     def __str__(self):
         return " ".join([str(self.user), self.heu_username])

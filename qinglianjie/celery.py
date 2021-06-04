@@ -29,11 +29,11 @@ app.conf.beat_schedule = {
     },
     "auto_collect": {
         "task": "api.tasks.collect_scores",
-        "schedule": crontab(hour=1, minute=30),
+        "schedule": crontab(minute=0),
     },
     "auto_count_courses": {
         "task": "api.tasks.count_courses",
-        "schedule": crontab(hour=2, minute=0),
+        "schedule": crontab(minute=30),
     }
 }
 

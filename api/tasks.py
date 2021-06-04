@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from lib.heu import Crawler
 from api.models import HEUAccountInfo, CourseInfo, CourseScore, ScoreQueryResult, TimetableQueryResult, RecentGradeCourse
+from django.utils import timezone
 import os, json, django
 
 
@@ -56,63 +57,78 @@ def do_report(username:str, password:str):
 
 
 @shared_task
-def collect_scores():
+def do_collect_scores(id):
     django.setup()
+    info = HEUAccountInfo.objects.get(id=id)
+    heu_username = info.heu_username
+    heu_password = info.heu_password
     recent_grade = set()
-    for info in HEUAccountInfo.objects.filter(account_verify_status=True):
-        heu_username = info.heu_username
-        heu_password = info.heu_password
-        try:
-            crawler = Crawler()
-            crawler.login(info.heu_username, info.heu_password)
-            scores = crawler.getScores()
-        except Exception as e:
-            continue
+    try:
+        crawler = Crawler()
+        crawler.login(info.heu_username, info.heu_password)
+        scores = crawler.getScores()
+    except Exception as e:
+        return "Fail"
 
-        first_time_collect_scores = CourseScore.objects.filter(heu_username=heu_username).count() == 0
-        for record in scores:
-            course_id = record[2]
-            name = record[3]
-            credit = record[5]
-            total_time = record[6]
-            assessment_method = record[7]
-            course_kind = record[8]
-            attributes = record[9]
-            kind = record[10]
-            general_category = record[11]
+    for record in scores:
+        course_id = record[2]
+        name = record[3]
+        credit = record[5]
+        total_time = record[6]
+        assessment_method = record[7]
+        course_kind = record[8]
+        attributes = record[9]
+        kind = record[10]
+        general_category = record[11]
 
-            if len(CourseInfo.objects.filter(course_id=course_id)) == 0:
-                course = CourseInfo.objects.create(
-                    course_id=course_id,
-                    name=name,
-                    credit=credit,
-                    total_time=total_time,
-                    assessment_method=assessment_method,
-                    attributes=attributes,
-                    kind=kind,
-                    general_category=general_category,
-                )
-                course.save()
+        if len(CourseInfo.objects.filter(course_id=course_id)) == 0:
+            course = CourseInfo.objects.create(
+                course_id=course_id,
+                name=name,
+                credit=credit,
+                total_time=total_time,
+                assessment_method=assessment_method,
+                attributes=attributes,
+                kind=kind,
+                general_category=general_category,
+            )
+            course.save()
 
-            course = CourseInfo.objects.get(course_id=course_id)
+        course = CourseInfo.objects.get(course_id=course_id)
 
-            if len(CourseScore.objects.filter(course=course, heu_username=heu_username)) == 0 \
-                    and record[4] != "---"\
-                    and course_kind == "正常考试":
-                CourseScore.objects.create(
-                    course=course,
-                    heu_username=heu_username,
-                    score=record[4],
-                    term=record[1],
-                ).save()
+        if len(CourseScore.objects.filter(course=course, heu_username=heu_username)) == 0 \
+                and record[4] != "---" \
+                and course_kind == "正常考试":
+            CourseScore.objects.create(
+                course=course,
+                heu_username=heu_username,
+                score=record[4],
+                term=record[1],
+            ).save()
 
-                if not first_time_collect_scores:
-                    recent_grade.add(course)
+            if not info.first_time_collect_scores:
+                recent_grade.add(course)
+
+    if info.first_time_collect_scores:
+        info.first_time_collect_scores = False
+        info.save()
 
     for course in recent_grade:
+        temp = RecentGradeCourse.objects.filter(course=course)
+        if len(temp)>=1:
+            delta = timezone.now() - temp[0].created
+            if delta.total_seconds() <= 60*60*24:
+                continue
         RecentGradeCourse.objects.create(course=course)
 
-    print(recent_grade)
+    return "Success"
+
+
+@shared_task
+def collect_scores():
+    django.setup()
+    for info in HEUAccountInfo.objects.filter(account_verify_status=True):
+        do_collect_scores.delay(info.id)
     return "Success"
 
 

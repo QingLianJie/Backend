@@ -84,6 +84,7 @@ def update_heu_accounts(request):
         return JsonResponse({"status": "FAILURE", "message": "HEU account failed to login!"})
     user_info.heu_username = username
     user_info.heu_password = password
+    user_info.first_time_collect_scores = True
     user_info.account_verify_status = True
     user_info.save()
     return JsonResponse({"status": "SUCCESS"})

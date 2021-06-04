@@ -52,12 +52,11 @@
                         <a class="card bg-light px-2 py-2 mt-2 mx-0" href="/course/{{ record.course_id }}"
                            style="text-decoration:none;border-radius:12px;">
                             <span class="text-dark px-1">
-                                <strong>
-                                    {{ record.course_name }}
-                                </strong>
-                                 {{ record.time }}
+                                {{ record.course_name }} {{ record.time }}
                             </span>
                         </a>
+                        {% empty %}
+                            暂无出分课程
                         {% endfor %}
                 </div>
 
