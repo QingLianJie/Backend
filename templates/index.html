@@ -43,11 +43,30 @@
                 {% endfor %}
             </div>
             <div class="mb-3 col-md-12 col-lg-4">
+                <div class="card mt-3 p-3">
+                        <span class="font-weight-bold form-inline">
+                        <h4>最近出分课程</h4>
+                        </span>
+                        <hr class="my-2">
+                        {% for record in recent %}
+                        <a class="card bg-light px-2 py-2 mt-2 mx-0" href="/course/{{ record.course_id }}"
+                           style="text-decoration:none;border-radius:12px;">
+                            <span class="text-dark px-1">
+                                <strong>
+                                    {{ record.course_name }}
+                                </strong>
+                                 {{ record.time }}
+                            </span>
+                        </a>
+                        {% endfor %}
+                </div>
+
                 <div class="card p-3 mt-3">
                     <h6><strong>Contact Qinglianjie</strong></h6>
                     <hr class="my-2">
                     <p><a href="mailto:bakedviolin@foxmail.com">bakedviolin@foxmail.com</a></p>
                 </div>
+
                 <div class="card p-3 mt-3">
                     <h6><strong>特别赞助</strong></h6>
                     <hr class="my-2">

@@ -280,6 +280,17 @@ def remove_my_comment(request):
     }, status=204)
 
 
+def recent_grade_course(request):
+    return JsonResponse({
+        "status": "SUCCESS",
+        "data": [{
+            "course_name": record.course.name,
+            "course_id": record.course.course_id,
+            "time": record.created,
+        } for record in RecentGradeCourse.objects.all()],
+    })
+
+
 class CourseCommentView(View):
     def get(self, request):
         course_id = request.GET.get("course_id")

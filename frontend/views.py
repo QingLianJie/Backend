@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from datetime import datetime,timedelta
-from api.models import HEUAccountInfo, CourseInfo, CourseScore, CourseComment
+from api.models import HEUAccountInfo, CourseInfo, CourseScore, CourseComment, RecentGradeCourse
 from frontend.models import Article
 from django.core.paginator import Paginator
 from django.views.decorators.cache import cache_page
@@ -36,7 +36,12 @@ def index(request):
             "course_name": comment.course.name,
             "created": comment.created,
             "content": comment.content,
-        } for comment in CourseComment.objects.all()[:5]],
+        } for comment in CourseComment.objects.all()[:10]],
+        'recent': [{
+            "course_name": record.course.name,
+            "course_id": record.course.course_id,
+            "time": record.created,
+        } for record in RecentGradeCourse.objects.all()[:10]],
     })
 
 

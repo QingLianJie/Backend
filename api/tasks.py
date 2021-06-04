@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from lib.heu import Crawler
-from api.models import HEUAccountInfo, CourseInfo, CourseScore, ScoreQueryResult, TimetableQueryResult
+from api.models import HEUAccountInfo, CourseInfo, CourseScore, ScoreQueryResult, TimetableQueryResult, RecentGradeCourse
 import os, json, django
 
 
@@ -58,6 +58,7 @@ def do_report(username:str, password:str):
 @shared_task
 def collect_scores():
     django.setup()
+    recent_grade = set()
     for info in HEUAccountInfo.objects.filter(account_verify_status=True):
         heu_username = info.heu_username
         heu_password = info.heu_password
@@ -68,6 +69,7 @@ def collect_scores():
         except Exception as e:
             continue
 
+        first_time_collect_scores = CourseScore.objects.filter(heu_username=heu_username).count() == 0
         for record in scores:
             course_id = record[2]
             name = record[3]
@@ -103,6 +105,14 @@ def collect_scores():
                     score=record[4],
                     term=record[1],
                 ).save()
+
+                if not first_time_collect_scores:
+                    recent_grade.add(course)
+
+    for course in recent_grade:
+        RecentGradeCourse.objects.create(course=course)
+
+    print(recent_grade)
     return "Success"
 
 

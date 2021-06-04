@@ -8,7 +8,7 @@ urlpatterns = [
     path('query/timetable', views.query_time_table, name="query_time_table"),
     path('refresh/timetable', views.refresh_time_table, name="refresh_time_table"),
     # path('report', views.test_auto_report, name="auto_report"),
-    # path('collect/scores', views.test_collect_scores, name="collect_scores"),
+    path('collect/scores', views.test_collect_scores, name="collect_scores"),
     path('query/course_scores', views.query_course_scores, name="query_course_scores"),
     path('query/courses', views.query_course_info, name="query_courses"),
     #path('heu/update', views.update_heu_accounts, name="update_heu_accounts"),
@@ -17,6 +17,6 @@ urlpatterns = [
     path('course/comment', views.CourseCommentView.as_view(), name="course_comment"),
     path('course/count', views.course_count, name="course_count"),
     path('course/comment/my', views.query_my_comment, name="query_my_comment"),
-    path('course/comment/remove', views.remove_my_comment, name="remove_my_comment")
-
+    path('course/comment/remove', views.remove_my_comment, name="remove_my_comment"),
+    path('course/recent', views.recent_grade_course, name="recent_grade_course"),
 ]

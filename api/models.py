@@ -94,3 +94,11 @@ class TimetableQueryResult(models.Model):
 
     class Meta:
         ordering = ('-created',)
+
+
+class RecentGradeCourse(models.Model):
+    course = models.ForeignKey(CourseInfo, on_delete=models.DO_NOTHING)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ('-created',)
