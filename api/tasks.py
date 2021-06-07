@@ -3,6 +3,8 @@ from celery import shared_task
 from lib.heu import Crawler
 from api.models import HEUAccountInfo, CourseInfo, CourseScore, ScoreQueryResult, TimetableQueryResult, RecentGradeCourse
 from django.utils import timezone
+from django.core.mail import send_mail
+from qinglianjie.settings import EMAIL_FROM
 import os, json, django
 
 
@@ -68,6 +70,8 @@ def do_collect_scores(id):
         crawler.login(info.heu_username, info.heu_password)
         scores = crawler.getScores()
     except Exception as e:
+        info.fail_last_time = True
+        info.save()
         return "Fail"
 
     for record in scores:
@@ -96,6 +100,8 @@ def do_collect_scores(id):
 
         course = CourseInfo.objects.get(course_id=course_id)
 
+
+
         if len(CourseScore.objects.filter(course=course, heu_username=heu_username)) == 0 \
                 and record[4] != "---" \
                 and course_kind == "正常考试":
@@ -106,20 +112,43 @@ def do_collect_scores(id):
                 term=record[1],
             ).save()
 
-            if not info.first_time_collect_scores:
-                recent_grade.add(course)
+            if not info.fail_last_time:
+                recent = RecentGradeCourse.objects.filter(course=course)
+                flag = True
+                if len(recent) >= 1:
+                    delta = timezone.now() - recent[0].created
+                    if delta.total_seconds() <= 60 * 60 * 24:
+                        flag = False
+                if flag:
+                    RecentGradeCourse.objects.create(course=course).save()
 
-    if info.first_time_collect_scores:
-        info.first_time_collect_scores = False
+            #出分时邮件发给我！
+            if info.mail_when_grade:
+                if not info.fail_last_time:
+                    recent = RecentGradeCourse.objects.filter(course=course)
+                    flag = False
+                    if len(recent) >= 1:
+                        delta = timezone.now() - recent[0].created
+                        if delta.total_seconds() <= 60 * 60 * 24:
+                            flag = True
+                    else:
+                        flag = True
+                    print(info,course,record)
+                    print(flag)
+                    if flag:
+                        print(info.user.email)
+                        send_mail(
+                            '%s 出分提醒' % course.name,
+                            '你的分数是 %s，欢迎到清廉街发表课程评论。\n' % str(record[4]) +
+                            '如果你不想再收到出分提醒，可以在个人主页里关闭该功能。\n' +
+                            'Qinglianjie',
+                            EMAIL_FROM,
+                            [info.user.email],
+                        )
+
+    if info.fail_last_time:
+        info.fail_last_time = False
         info.save()
-
-    for course in recent_grade:
-        temp = RecentGradeCourse.objects.filter(course=course)
-        if len(temp)>=1:
-            delta = timezone.now() - temp[0].created
-            if delta.total_seconds() <= 60*60*24:
-                continue
-        RecentGradeCourse.objects.create(course=course)
 
     return "Success"
 

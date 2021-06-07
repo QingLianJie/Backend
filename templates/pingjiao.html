@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="collapse hide" id="refresh_progress">
+    <div class="progress">
+        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="69"
+             class="progress-bar progress-bar-striped progress-bar-animated"
+             style="width: 100%;">
+        </div>
+    </div>
+</div>
+<div class="main container">
+
+
+
+    <div class="row">
+        {% if fail %}
+            <div class="alert alert-danger col-12 mt-2" role="alert">
+                获取未评教列表失败！请检查教务系统账号密码！
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="normalModal" tabindex="-1" aria-labelledby="normalModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modal_close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modal_button">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not fail %}
+    <div class="row">
+        <div class="mt-3 col-lg-6 offset-lg-3 col-12 px-5">
+            <div class="card">
+                <div class="card-header">
+                    <div class="mt-2 mb-2">
+                        <h4>一键评教</h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if empty %}
+                        <p>暂无需要评教的课程！</p>
+                    {% else %}
+                    <p>您的下列课程：
+                    <ul>
+                        {% for course in data %}
+                        <li>{{ course }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    暂未评教，是否快速评教？
+                    </p>
+                    <div class="login form-group mb-0">
+                        {% csrf_token %}
+                        <button class="primaryAction btn btn-success btn-block" id="pingjiao">一键评教</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<script>
+    window.onload = function () {
+        $('#pingjiao').click(function () {
+            $('#refresh_progress').collapse('show');
+            $.ajax({
+                url: '{% url 'do_pingjiao' %}',
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token  }}',
+                },
+                complete:
+                function (data) {
+                    console.log(data);
+                    $('#modalContent')[0].innerText = data.responseJSON.message;
+                    $('#normalModal').modal('show');
+                    $('#modal_button').click(function(){
+                        location.reload();
+                    })
+                },
+            });
+        });
+    }
+</script>
+{% endblock %}

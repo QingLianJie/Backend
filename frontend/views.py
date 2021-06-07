@@ -10,6 +10,7 @@ from frontend.models import Article
 from django.core.paginator import Paginator
 from django.views.decorators.cache import cache_page
 from functools import wraps
+from lib.heu import *
 import json, lib
 
 
@@ -318,4 +319,26 @@ def profile(request):
             "anonymous": comment.anonymous,
             "id": comment.id,
         } for comment in CourseComment.objects.filter(user=user)],
+    })
+
+
+@login_required
+def pingjiao(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+    info = HEUAccountInfo.objects.get(user=user)
+    fail = False
+    data = []
+    try:
+        crawler = Crawler()
+        crawler.login_pingjiao(info.heu_username, info.heu_password)
+        data = crawler.pingjiao(check=True)
+    except Exception as e:
+        fail = True
+
+    return render(request, "pingjiao.html", {
+        'data': data,
+        'fail': fail,
+        'empty': len(data)==0,
+        'pingjiao_page': True,
     })

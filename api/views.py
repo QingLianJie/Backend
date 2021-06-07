@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from qinglianjie.settings import COURSE_COMMENT_INTERVAL
 from django.http import QueryDict
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 import lib.heu, time, json
 
 
@@ -338,11 +339,7 @@ class CourseCommentView(View):
             }, status=401)
         user = User.objects.get(id=user_id)
 
-        # print(request.FORM)
-        # print(request.POST)
-        # print(request.GET)
         course_id = request.POST.get("course_id")
-        # print(course_id)
         try:
             course = CourseInfo.objects.get(course_id=course_id)
         except Exception as e:
@@ -386,6 +383,48 @@ class CourseCommentView(View):
             "status": 201,
             "message": "评论成功",
         }, status=201)
+
+
+@login_required
+@heu_account_verify_required
+def pingjiao(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+    info = HEUAccountInfo.objects.get(user=user)
+    try:
+        crawler = Crawler()
+        crawler.login_pingjiao(info.heu_username, info.heu_password)
+        return JsonResponse({
+                "status": 200,
+                "data": crawler.pingjiao(check=True),
+        }, status=201)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            "status": 500,
+            "message": "获取未评教列表失败！",
+        }, status=500)
+
+
+@login_required
+@heu_account_verify_required
+def do_pingjiao(request):
+    user_id = request.session["_auth_user_id"]
+    user = User.objects.get(id=user_id)
+    info = HEUAccountInfo.objects.get(user=user)
+    try:
+        crawler = Crawler()
+        crawler.login_pingjiao(info.heu_username, info.heu_password)
+        return JsonResponse({
+            "status": 200,
+            "message": "下列课程已经评教完成：\n" + "\n".join(crawler.pingjiao(check=False)),
+        }, status=201)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            "status": 500,
+            "message": "评教失败！请检查教务处账号密码！"
+        }, status=500)
 
 
 def course_count(request):

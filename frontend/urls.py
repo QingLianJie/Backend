@@ -14,6 +14,7 @@ urlpatterns = [
     path('courses', views.courses, name="courses"),
     path('course/<int:course_id>', views.course, name="course"),
     path('profile', views.profile, name="profile"),
-    url(r'mdeditor/', include('mdeditor.urls')),
+    path('pingjiao', views.pingjiao, name="pingjiao"),
 
+    url(r'mdeditor/', include('mdeditor.urls')),
 ]

@@ -19,4 +19,7 @@ urlpatterns = [
     path('course/comment/my', views.query_my_comment, name="query_my_comment"),
     path('course/comment/remove', views.remove_my_comment, name="remove_my_comment"),
     path('course/recent', views.recent_grade_course, name="recent_grade_course"),
+
+    path('pingjiao', views.pingjiao, name="query_pingjiao"),
+    path('pingjiao/do', views.do_pingjiao, name="do_pingjiao"),
 ]
