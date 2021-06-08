@@ -47,17 +47,21 @@
                         <span class="font-weight-bold form-inline">
                         <h4>最近出分课程</h4>
                         </span>
-                        <hr class="my-2">
+
+                        <hr class="mt-2 mb-1">
                         {% for record in recent %}
-                        <a class="card bg-light px-2 py-2 mt-2 mx-0" href="/course/{{ record.course_id }}"
-                           style="text-decoration:none;border-radius:12px;">
-                            <span class="text-dark px-1">
-                                {{ record.course_name }} {{ record.time }}
+                        <a class="text-dark mt-1 mx-2" href="/course/{{ record.course_id }}">
+                                {{ record.course_name }}
+                            <span class="badge badge-pill badge-primary">
+                                {{ record.time }}
                             </span>
                         </a>
                         {% empty %}
                             暂无出分课程
                         {% endfor %}
+                        </ul>
+                        <hr class="mt-3 mb-2">
+                        <p class="mb-0">在<a href="{% url 'profile' %}">个人设置</a>中开启课程出分邮件提醒</p>
                 </div>
 
                 <div class="card p-3 mt-3">

@@ -418,13 +418,35 @@ def do_pingjiao(request):
         return JsonResponse({
             "status": 200,
             "message": "下列课程已经评教完成：\n" + "\n".join(crawler.pingjiao(check=False)),
-        }, status=201)
+        }, status=200)
     except Exception as e:
         print(e)
         return JsonResponse({
             "status": 500,
             "message": "评教失败！请检查教务处账号密码！"
         }, status=500)
+
+
+class MailWhenGradeView(View):
+    def post(self, request):
+        user_id = request.session["_auth_user_id"]
+        user = User.objects.get(id=user_id)
+        info = HEUAccountInfo.objects.get(user=user)
+        info.mail_when_grade = not info.mail_when_grade
+        info.save()
+        return JsonResponse({
+            "status": 200,
+            "message": "修改成功！",
+        }, status=200)
+
+    def get(self, request):
+        user_id = request.session["_auth_user_id"]
+        user = User.objects.get(id=user_id)
+        info = HEUAccountInfo.objects.get(user=user)
+        return JsonResponse({
+            "status": 200,
+            "data": info.mail_when_grade,
+        }, status=200)
 
 
 def course_count(request):

@@ -1,5 +1,5 @@
 from django.urls import path
-
+from django.contrib.auth.decorators import login_required
 from . import views
 
 urlpatterns = [
@@ -22,4 +22,7 @@ urlpatterns = [
 
     path('pingjiao', views.pingjiao, name="query_pingjiao"),
     path('pingjiao/do', views.do_pingjiao, name="do_pingjiao"),
+
+    path('grade/notify', login_required(views.MailWhenGradeView.as_view()),
+                                        name="grade_notify"),
 ]

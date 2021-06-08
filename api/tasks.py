@@ -63,8 +63,6 @@ def do_collect_scores(id):
     django.setup()
     info = HEUAccountInfo.objects.get(id=id)
     heu_username = info.heu_username
-    heu_password = info.heu_password
-    recent_grade = set()
     try:
         crawler = Crawler()
         crawler.login(info.heu_username, info.heu_password)
@@ -99,8 +97,6 @@ def do_collect_scores(id):
             course.save()
 
         course = CourseInfo.objects.get(course_id=course_id)
-
-
 
         if len(CourseScore.objects.filter(course=course, heu_username=heu_username)) == 0 \
                 and record[4] != "---" \
@@ -137,14 +133,18 @@ def do_collect_scores(id):
                     print(flag)
                     if flag:
                         print(info.user.email)
-                        send_mail(
-                            '%s 出分提醒' % course.name,
-                            '你的分数是 %s，欢迎到清廉街发表课程评论。\n' % str(record[4]) +
-                            '如果你不想再收到出分提醒，可以在个人主页里关闭该功能。\n' +
-                            'Qinglianjie',
-                            EMAIL_FROM,
-                            [info.user.email],
-                        )
+                        try:
+                            send_mail(
+                                '%s 出分提醒' % course.name,
+                                '你的分数是 %s，欢迎到清廉街发表课程评论。\n' % str(record[4]) +
+                                '如果你不想再收到出分提醒，可以在个人主页里关闭该功能。\n' +
+                                'Qinglianjie',
+                                EMAIL_FROM,
+                                [info.user.email],
+                            )
+                        except Exception as e:
+                            #邮件发送失败:( do nothing
+                            pass
 
     if info.fail_last_time:
         info.fail_last_time = False

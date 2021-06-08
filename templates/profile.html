@@ -56,13 +56,26 @@
                         绑定学号
                     </button>
                 </div>
-{#                <div class="card p-3 mt-3">#}
-{#                    <h6><strong>特别赞助</strong></h6>#}
-{#                    <hr class="my-2">#}
-{#                    <p>#}
-{#                        反正没有海某科技#}
-{#                    </p>#}
-{#                </div>#}
+                <div class="card p-3 mt-3">
+                    <h4>出分提醒</h4>
+                    <hr class="my-2">
+                    <p>
+                        当您学的课程出分时会自动发送一份邮件通知您，是否{% if mail_when_grade %}关闭{% else %}开启{% endif %}该功能？
+                    </p>
+                    {% if mail_when_grade %}
+                        <form class="login form-group mb-0">
+                            <button class="primaryAction btn btn-danger btn-block"
+                                    type="submit"
+                                    id="mail_when_grade">关闭</button>
+                        </form>
+                    {% else %}
+                        <form class="login form-group mb-0">
+                            <button class="primaryAction btn btn-success btn-block"
+                                    type="submit"
+                                    id="mail_when_grade">开启</button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
             <div class="mb-3 col-md-12 col-lg-8">
 
@@ -126,7 +139,19 @@
 
         window.onload = function () {
             $('#refresh_progress').collapse('hide');
-
         }
+
+        $('#mail_when_grade').click(function(){
+            $.ajax({
+                url: '{% url 'grade_notify' %}',
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token  }}',
+                },
+                success: function (data) {
+                    window.location.reload();
+                },
+            });
+        });
     </script>
 {% endblock %}

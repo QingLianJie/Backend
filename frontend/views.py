@@ -319,6 +319,7 @@ def profile(request):
             "anonymous": comment.anonymous,
             "id": comment.id,
         } for comment in CourseComment.objects.filter(user=user)],
+        'mail_when_grade': HEUAccountInfo.objects.get(user=user).mail_when_grade,
     })
 
 
@@ -327,6 +328,10 @@ def pingjiao(request):
     user_id = request.session["_auth_user_id"]
     user = User.objects.get(id=user_id)
     info = HEUAccountInfo.objects.get(user=user)
+
+    if not info.account_verify_status:
+        return redirect(reverse("bind"))
+
     fail = False
     data = []
     try:
