@@ -15,9 +15,9 @@ def query_scores(username:str, password:str):
     try:
         crawler = Crawler()
         crawler.login(username, password)
-        ScoreQueryResult.objects.create(heu_username=username,result=json.dumps(crawler.getScores())).save()
+        ScoreQueryResult.objects.get_or_create(heu_username=username,result=json.dumps(crawler.getScores())).save()
     except Exception as e:
-        ScoreQueryResult.objects.create(heu_username=username,fail=True).save()
+        ScoreQueryResult.objects.get_or_create(heu_username=username,fail=True).save()
         print(e)
         return "Fail"
     return "Success"
@@ -30,9 +30,9 @@ def query_time_table(username:str, password:str, term:str):
     try:
         crawler = Crawler()
         crawler.login(username, password)
-        TimetableQueryResult.objects.create(heu_username=username,result=json.dumps(crawler.getTermTimetable(term))).save()
+        TimetableQueryResult.objects.get_or_create(heu_username=username,result=json.dumps(crawler.getTermTimetable(term))).save()
     except Exception as e:
-        TimetableQueryResult.objects.create(heu_username=username,fail=True).save()
+        TimetableQueryResult.objects.get_or_create(heu_username=username,fail=True).save()
         print(e)
         return "Fail"
     return "Success"
